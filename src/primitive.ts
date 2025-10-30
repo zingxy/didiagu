@@ -1,46 +1,63 @@
 import { Graphics, Container } from 'pixi.js';
+import { nanoid } from 'nanoid';
 
-interface Primitive {
-  shapeId: string | number;
+interface IPrimitive {
+  // uuid, 构造对象的唯一id
+  uuid: string;
+  // 业务元素唯一id
+  objectId?: string;
+  // pose edge curve rect
+  tag: string;
 }
 
-class Node extends Container implements Primitive {
-  shapeId: Primitive['shapeId'];
-  constructor({
-    x,
-    y,
-    id,
-  }: {
-    x: number;
-    y: number;
-    id: Primitive['shapeId'];
-  }) {
+abstract class AbstractPrimitive extends Container implements IPrimitive {
+  // 唯一标识符
+  uuid: string;
+  // 业务元素唯一id
+  objectId?: string;
+  abstract tag: string;
+  constructor(config?: { objectId?: string }) {
     super();
-    this.shapeId = id;
-    const circle = new Graphics().circle(0, 0, 5).fill('blue');
-    this.position.set(x, y);
-    this.addChild(circle);
+    this.uuid = nanoid();
+    this.objectId = config?.objectId;
   }
 }
 
-class Edge extends Container implements Primitive {
-  shapeId: Primitive['shapeId'];
-  constructor({
-    from,
-    to,
-    id,
-  }: {
-    from: Node;
-    to: Node;
-    id: Primitive['shapeId'];
-  }) {
-    super();
-    this.shapeId = id;
-    console.log('Creating edge from', from.position, 'to', to.position);
-    const line = new Graphics()
-      .moveTo(from.position.x, from.position.y)
-      .lineTo(to.position.x, to.position.y)
-      .stroke({ color: 'black', width: 2 });
+interface INodeConfig {
+  objectId?: string;
+  x: number;
+  y: number;
+}
+class Node extends AbstractPrimitive {
+  tag = 'node';
+  constructor(config: INodeConfig) {
+    super({ objectId: config?.objectId });
+    const dot = new Graphics().circle(0, 0, 5).fill('red');
+    this.x = config.x;
+    this.y = config.y;
+    this.addChild(dot);
+  }
+}
+
+interface IEdgeConfig {
+  objectId?: string;
+  from: Node;
+  to: Node;
+}
+class Edge extends AbstractPrimitive {
+  tag = 'edge';
+  from: Node;
+  to: Node;
+  constructor(config: IEdgeConfig) {
+    const { from, to, objectId } = config;
+    super({ objectId });
+    this.from = from;
+    this.to = to;
+
+    const line = new Graphics();
+    line.moveTo(from.x, from.y);
+    line.lineTo(to.x, to.y);
+    line.stroke({ width: 2, color: 'blue' });
     this.addChild(line);
   }
 }
