@@ -101,6 +101,22 @@ class Editor {
           .stroke({ color: 0xff0000, width: 2, alpha: 0.8 });
         break;
       }
+      case 'perpendicular': {
+        // 垂直标记：画一个小的直角符号
+        const size = 8;
+        this.currentHighlight
+          .moveTo(snapPoint.position.x - size, snapPoint.position.y)
+          .lineTo(snapPoint.position.x, snapPoint.position.y)
+          .lineTo(snapPoint.position.x, snapPoint.position.y - size)
+          .moveTo(
+            snapPoint.position.x - size / 2,
+            snapPoint.position.y - size / 2
+          )
+          .lineTo(snapPoint.position.x - size / 2, snapPoint.position.y)
+          .lineTo(snapPoint.position.x, snapPoint.position.y)
+          .stroke({ color: 0xff6600, width: 2, alpha: 0.9 });
+        break;
+      }
     }
 
     this.highlightLayer.addChild(this.currentHighlight);
@@ -142,6 +158,12 @@ class Editor {
       this.snap(
         {
           cursor: event.global,
+          currentLine: edgeInProgress
+            ? {
+                from: { x: edgeInProgress.from.x, y: edgeInProgress.from.y },
+                to: { x: edgeInProgress.to.x, y: edgeInProgress.to.y },
+              }
+            : undefined,
         },
         (feature) =>
           feature !== fromNode &&

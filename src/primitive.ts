@@ -168,18 +168,36 @@ export class SnapEngine {
   }
 
   pickBest(cursor: PointData, candidates: SnapPoint[]): SnapPoint | null {
-    let best: SnapPoint | null = null;
-    let minDist = Infinity;
+    // 定义优先级顺序：数字越小优先级越高
+    const priorityOrder = {
+      midpoint: 1, // 中点优先级最高
+      endpoint: 2, // 端点次之
+      perpendicular: 3, // 垂直吸附
+      nearest: 4, // 最近点优先级最低
+    };
 
-    for (const candidate of candidates) {
-      const dist = this.distance(candidate.position, cursor);
-      if (dist <= this.tolerance && dist < minDist) {
-        minDist = dist;
-        best = candidate;
-      }
+    // 筛选出在容差范围内的候选点
+    const validCandidates = candidates
+      .map((candidate) => ({
+        ...candidate,
+        distance: this.distance(candidate.position, cursor),
+        priority: priorityOrder[candidate.type],
+      }))
+      .filter((candidate) => candidate.distance <= this.tolerance);
+
+    if (validCandidates.length === 0) {
+      return null;
     }
 
-    return best;
+    // 按优先级排序，优先级相同时按距离排序
+    validCandidates.sort((a, b) => {
+      if (a.priority !== b.priority) {
+        return a.priority - b.priority; // 优先级排序
+      }
+      return a.distance - b.distance; // 距离排序
+    });
+
+    return validCandidates[0];
   }
   distance(p1: PointData, p2: PointData): number {
     const dx = p1.x - p2.x;
@@ -264,13 +282,60 @@ class NearestPointSnap extends SnapStrategy {
     super();
   }
   isApplicable(context: SnapContext): boolean {
-    return !!context.cursor;
+    return !!context.currentLine;
   }
   compute(context: SnapContext, features: Feature[]): SnapPoint[] {
     const snaps: SnapPoint[] = [];
     for (const feature of features) {
       if (feature.type === 'edge') {
         const edge = feature as EdgeFeature;
+
+        if (context.currentLine) {
+          // 简化的垂直吸附逻辑：直接使用鼠标位置到边的最近点
+          const { from } = context.currentLine;
+          const foot = edge.nearest(context.cursor);
+
+          // 当前绘制方向向量
+          const currentDir = {
+            x: context.cursor.x - from.x,
+            y: context.cursor.y - from.y,
+          };
+
+          // 目标边的方向向量
+          const edgeStart = edge.getStart();
+          const edgeEnd = edge.getEnd();
+          const edgeDir = {
+            x: edgeEnd.x - edgeStart.x,
+            y: edgeEnd.y - edgeStart.y,
+          };
+
+          // 计算当前方向与目标边的夹角
+          const currentLength = Math.sqrt(
+            currentDir.x * currentDir.x + currentDir.y * currentDir.y
+          );
+          const edgeLength = Math.sqrt(
+            edgeDir.x * edgeDir.x + edgeDir.y * edgeDir.y
+          );
+
+          if (currentLength > 10 && edgeLength > 0) {
+            const dot = Math.abs(
+              currentDir.x * edgeDir.x + currentDir.y * edgeDir.y
+            );
+            const cosAngle = dot / (currentLength * edgeLength);
+
+            // 如果接近垂直（夹角在75°-105°之间），提供垂直吸附
+            if (cosAngle < 0.25) {
+              // cos(75°) ≈ 0.25
+              snaps.push({
+                type: 'perpendicular',
+                position: foot,
+                feature: edge,
+              });
+              continue;
+            }
+          }
+        }
+
         snaps.push({
           type: 'nearest',
           position: edge.nearest(context.cursor),
@@ -279,43 +344,6 @@ class NearestPointSnap extends SnapStrategy {
       }
     }
     return snaps;
-  }
-}
-
-class PerpendicularSnap extends SnapStrategy {
-  name = 'perpendicular' as const;
-  constructor() {
-    super();
-  }
-  isApplicable(context: SnapContext): boolean {
-    return !!context.cursor && !!context.currentLine;
-  }
-  compute(context: SnapContext, features: Feature[]): SnapPoint[] {
-    const snaps: SnapPoint[] = [];
-    const currentLine = context.currentLine!;
-    for (const feature of features) {
-      if (feature.type === 'edge') {
-        const edge = feature as EdgeFeature;
-        // 计算一下两条线的垂足
-        const foot = this.getPerpendicularFoot(currentLine, edge);
-        if (foot) {
-          snaps.push({
-            type: 'perpendicular',
-            position: foot,
-            feature: edge,
-          });
-        }
-      }
-    }
-    return snaps;
-  }
-
-  private getPerpendicularFoot(
-    line: { start: PointData; end: PointData },
-    edge: EdgeFeature
-  ): PointData | null {
-    // 计算垂足的逻辑
-    return null;
   }
 }
 
