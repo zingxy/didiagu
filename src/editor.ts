@@ -1,51 +1,50 @@
-import { Application, Container, Graphics, type PointData } from 'pixi.js';
-import { Node, Edge, SnapEngine } from './primitive';
-import type { Feature, SnapContext, SnapPoint } from './primitive';
+import { Application, Container, Graphics } from 'pixi.js';
+import { Node, Edge, Rect, AbstractPrimitive } from './primitive';
+import type { Feature, LineImpl, RefContext, RefItem } from './snap';
+import { isLineFeature, RefEngine } from './snap';
+import type { Ref } from 'react';
 
 class Editor {
   app: Application;
   nodeLayer: Container<Node>;
   edgeLayer: Container<Edge>;
-  snapEngine: SnapEngine;
+  primitiveLayer: Container<AbstractPrimitive>;
+  snapEngine: RefEngine;
   highlightLayer: Container;
   currentHighlight: Graphics | null = null;
 
   constructor() {
     this.app = new Application();
-    this.snapEngine = new SnapEngine();
+    this.snapEngine = new RefEngine();
     this.nodeLayer = new Container<Node>();
     this.edgeLayer = new Container<Edge>();
+    this.primitiveLayer = new Container<AbstractPrimitive>();
     this.highlightLayer = new Container();
     this.app.stage.addChild(this.nodeLayer);
     this.app.stage.addChild(this.edgeLayer);
+    this.app.stage.addChild(this.primitiveLayer);
     this.app.stage.addChild(this.highlightLayer);
   }
 
-  snap(
-    context: SnapContext,
-    filter: (feature: Feature) => boolean = () => true
-  ) {
+  snap(context: RefContext, excludes: AbstractPrimitive[]) {
     // 清除之前的高亮
     this.clearHighlight();
 
-    let features: Feature[] = [];
+    const features: Feature[] = [];
     for (const node of this.nodeLayer.children) {
       features.push(...node.getFeatures());
     }
     for (const edge of this.edgeLayer.children) {
       features.push(...edge.getFeatures());
     }
-    features = features.filter(filter);
-    const candidates = this.snapEngine.generateSnapCandidates(
-      context,
-      features
-    );
-    const best = this.snapEngine.pickBest(context.cursor, candidates);
-
-    if (best) {
-      this.showHighlight(best);
-      console.log('最佳吸附点', best);
+    for (const primitive of this.primitiveLayer.children) {
+      if (excludes.includes(primitive)) {
+        continue;
+      }
+      features.push(...primitive.getFeatures());
     }
+    const candidates = this.snapEngine.compute({ ...context, features });
+    this.showHighlight(candidates);
   }
 
   private clearHighlight() {
@@ -56,66 +55,28 @@ class Editor {
     }
   }
 
-  private showHighlight(snapPoint: SnapPoint) {
+  private showHighlight(items: RefItem[]) {
     // 创建新的高亮图形
     this.currentHighlight = new Graphics();
 
     // 根据吸附点类型选择不同的高亮样式
-    switch (snapPoint.type) {
-      case 'endpoint':
-        // 端点用实心圆圈
+    for (const item of items) {
+      if (item.type === 'refline') {
+        const line = item.provider as LineImpl;
         this.currentHighlight
-          .circle(snapPoint.position.x, snapPoint.position.y, 8)
-          .fill({ color: 0x00ff00, alpha: 0.8 })
-          .circle(snapPoint.position.x, snapPoint.position.y, 8)
-          .stroke({ color: 0x00aa00, width: 2 });
-        break;
-
-      case 'midpoint': {
-        // 中点用菱形
-        const size = 6;
-        this.currentHighlight
-          .poly([
-            snapPoint.position.x,
-            snapPoint.position.y - size, // 上
-            snapPoint.position.x + size,
-            snapPoint.position.y, // 右
-            snapPoint.position.x,
-            snapPoint.position.y + size, // 下
-            snapPoint.position.x - size,
-            snapPoint.position.y, // 左
-          ])
-          .fill({ color: 0xffff00, alpha: 0.8 })
-          .stroke({ color: 0xcccc00, width: 2 });
-        break;
-      }
-
-      case 'nearest': {
-        // 最近点用十字线
-        const crossSize = 10;
-        this.currentHighlight
-          .moveTo(snapPoint.position.x - crossSize, snapPoint.position.y)
-          .lineTo(snapPoint.position.x + crossSize, snapPoint.position.y)
-          .moveTo(snapPoint.position.x, snapPoint.position.y - crossSize)
-          .lineTo(snapPoint.position.x, snapPoint.position.y + crossSize)
-          .stroke({ color: 0xff0000, width: 2, alpha: 0.8 });
-        break;
-      }
-      case 'perpendicular': {
-        // 垂直标记：画一个小的直角符号
-        const size = 8;
-        this.currentHighlight
-          .moveTo(snapPoint.position.x - size, snapPoint.position.y)
-          .lineTo(snapPoint.position.x, snapPoint.position.y)
-          .lineTo(snapPoint.position.x, snapPoint.position.y - size)
-          .moveTo(
-            snapPoint.position.x - size / 2,
-            snapPoint.position.y - size / 2
-          )
-          .lineTo(snapPoint.position.x - size / 2, snapPoint.position.y)
-          .lineTo(snapPoint.position.x, snapPoint.position.y)
-          .stroke({ color: 0xff6600, width: 2, alpha: 0.9 });
-        break;
+          .moveTo(line.x1, line.y1)
+          .lineTo(line.x2, line.y2)
+          .stroke({ width: 1, color: 0xff0000 });
+        // 在端点画一个 ×
+        const drawX = (x: number, y: number, size = 5) => {
+          this.currentHighlight!.moveTo(x - size, y - size)
+            .lineTo(x + size, y + size)
+            .moveTo(x + size, y - size)
+            .lineTo(x - size, y + size)
+            .stroke({ width: 1, color: 0xff0000 });
+        };
+        drawX(line.x1, line.y1);
+        drawX(line.x2, line.y2);
       }
     }
 
@@ -138,52 +99,77 @@ class Editor {
     let fromNode: Node | null = null;
     let toNode: Node | null = null;
     let edgeInProgress: Edge | null = null;
+    let rectInProgress: Rect | null = null;
+    let rectStartPos: { x: number; y: number } = { x: 0, y: 0 };
     this.app.stage.on('pointerdown', (event) => {
       fromNode = new Node({ x: event.global.x, y: event.global.y });
-      this.nodeLayer.addChild(fromNode);
+      rectInProgress = new Rect({
+        x: event.global.x,
+        y: event.global.y,
+        size: { x: 100, y: 100 },
+      });
+      // this.nodeLayer.addChild(fromNode);
+      rectStartPos = { x: event.global.x, y: event.global.y };
+      this.primitiveLayer.addChild(rectInProgress);
     });
     // 监听鼠标移动事件, 进行吸附计算
     this.app.stage.on('pointermove', (event) => {
-      if (fromNode) {
-        toNode = toNode ?? new Node({ x: event.global.x, y: event.global.y });
-        edgeInProgress =
-          edgeInProgress ?? new Edge({ from: fromNode, to: toNode });
-        edgeInProgress.render();
-        toNode.x = event.global.x;
-        toNode.y = event.global.y;
-        this.nodeLayer.addChild(toNode);
-        this.edgeLayer.addChild(edgeInProgress);
+      // if (fromNode) {
+      //   toNode = toNode ?? new Node({ x: event.global.x, y: event.global.y });
+      //   edgeInProgress =
+      //     edgeInProgress ?? new Edge({ from: fromNode, to: toNode });
+      //   edgeInProgress.render();
+      //   toNode.x = event.global.x;
+      //   toNode.y = event.global.y;
+      //   this.nodeLayer.addChild(toNode);
+      //   this.edgeLayer.addChild(edgeInProgress);
+      // }
+      if (rectInProgress) {
+        rectInProgress.x += event.global.x - rectStartPos.x;
+        rectInProgress.y += event.global.y - rectStartPos.y;
+        rectStartPos = { x: event.global.x, y: event.global.y };
+        rectInProgress.render();
+
+        this.snap(
+          {
+            cursor: event.global,
+            linesToSnap: rectInProgress.getFeatures().filter(isLineFeature),
+            features: [],
+          },
+          [rectInProgress]
+        );
       }
 
-      this.snap(
-        {
-          cursor: event.global,
-          currentLine: edgeInProgress
-            ? {
-                from: { x: edgeInProgress.from.x, y: edgeInProgress.from.y },
-                to: { x: edgeInProgress.to.x, y: edgeInProgress.to.y },
-              }
-            : undefined,
-        },
-        (feature) =>
-          feature !== fromNode &&
-          feature !== edgeInProgress &&
-          feature !== toNode
-      );
+      // this.snap(
+      //   {
+      //     cursor: event.global,
+      //     currentLine: edgeInProgress
+      //       ? {
+      //           from: { x: edgeInProgress.from.x, y: edgeInProgress.from.y },
+      //           to: { x: edgeInProgress.to.x, y: edgeInProgress.to.y },
+      //         }
+      //       : undefined,
+      //   },
+      //   (feature) =>
+      //     feature !== fromNode &&
+      //     feature !== edgeInProgress &&
+      //     feature !== toNode
+      // );
     });
 
-    this.app.stage.on('pointerup', (event) => {
+    this.app.stage.on('pointerup', () => {
       fromNode = null;
       toNode = null;
       edgeInProgress = null;
+      rectInProgress = null;
     });
 
     const data = {
       nodes: [
         { id: 'node1', x: 100, y: 100 },
-        { id: 'node2', x: 400, y: 300 },
+        { id: 'node2', x: 200, y: 200 },
         { id: 'node3', x: 700, y: 150 },
-        { id: 'node4', x: 300, y: 400 },
+        { id: 'node4', x: 300, y: 300 },
       ],
       edges: [
         { from: 'node1', to: 'node2' },
@@ -192,6 +178,20 @@ class Editor {
           to: 'node3',
         },
         { from: 'node1', to: 'node4' },
+      ],
+      rects: [
+        {
+          id: 'rect1',
+          x: 500,
+          y: 400,
+          size: { x: 100, y: 100 },
+        },
+        {
+          id: 'rect2',
+          x: 100,
+          y: 100,
+          size: { x: 100, y: 100 },
+        },
       ],
     };
 
@@ -221,6 +221,15 @@ class Editor {
         });
         this.edgeLayer.addChild(edge);
       }
+    });
+    data.rects.forEach((rectData) => {
+      const rect = new Rect({
+        x: rectData.x,
+        y: rectData.y,
+        size: rectData.size,
+        objectId: rectData.id,
+      });
+      this.primitiveLayer.addChild(rect);
     });
   };
 
