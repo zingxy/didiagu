@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Editor } from './editor';
+import { Editor } from '@didiagu/core';
 function App() {
   const editorRef = useRef<Editor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
