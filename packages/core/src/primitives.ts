@@ -89,6 +89,8 @@ export class Rect extends AbstractPrimitive implements IRect {
   constructor(config: IRectConfig) {
     super();
     Object.assign(this, config);
+    this.eventMode = 'static';
+    this.interactive = true;
     this.render();
   }
   render(): void {

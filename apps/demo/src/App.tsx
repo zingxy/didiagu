@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
-import { Editor } from '@didiagu/core';
+import { Editor, Rect } from '@didiagu/core';
+import { Flex, Splitter, Typography } from 'antd';
 function App() {
   const editorRef = useRef<Editor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -11,7 +12,21 @@ function App() {
     }
 
     let ignore = false;
-    const editor = new Editor();
+    console.log(
+      'containerRef.current',
+      containerRef.current?.clientWidth,
+      containerRef.current?.clientHeight
+    );
+    const editor = new Editor({
+      width: containerRef.current?.clientWidth,
+      height: containerRef.current?.clientHeight,
+      background: '#f0f2f5',
+      resizeTo: containerRef.current!,
+    });
+    editor.bus.on('editor.initialized', () => {
+      editor.sceneGraph.removeChildren();
+      editor.sceneGraph.addChild(new Rect({ x: 100, y: 100, w: 200, h: 150 }));
+    });
 
     editor.init().then(() => {
       if (ignore) {
@@ -38,7 +53,32 @@ function App() {
     };
   }, []);
 
-  return <div ref={containerRef}></div>;
+  return (
+    <>
+      <Splitter className="h-screen" style={{ height: '100vh' }}>
+        <Splitter.Panel min={200} max="30%" defaultSize={200}>
+          <Desc text={1} />
+        </Splitter.Panel>
+        <Splitter.Panel>
+          <div ref={containerRef} className="w-full h-full"></div>
+        </Splitter.Panel>
+        <Splitter.Panel min={200} max="30%" defaultSize={200}>
+          <Desc text={3} />
+        </Splitter.Panel>
+      </Splitter>
+    </>
+  );
 }
+const Desc: React.FC<Readonly<{ text?: string | number }>> = (props) => (
+  <Flex justify="center" align="center" style={{ height: '100%' }}>
+    <Typography.Title
+      type="secondary"
+      level={5}
+      style={{ whiteSpace: 'nowrap' }}
+    >
+      Panel {props.text}
+    </Typography.Title>
+  </Flex>
+);
 
 export default App;

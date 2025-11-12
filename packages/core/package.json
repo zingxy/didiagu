@@ -16,6 +16,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@didiagu/shared": "workspace:*"
+    "@didiagu/shared": "workspace:*",
+    "@didiagu/math": "workspace:*",
+    "eventemitter3": "^5.0.1"
   }
 }

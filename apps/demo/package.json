@@ -10,9 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@didiagu/core": "workspace:*",
+    "@didiagu/shared": "workspace:*",
+    "@tailwindcss/vite": "^4.1.17",
+    "antd": "^5.28.1",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "@didiagu/core": "workspace:*"
+    "tailwindcss": "^4.1.17"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",

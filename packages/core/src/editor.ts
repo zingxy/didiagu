@@ -1,27 +1,43 @@
-import { Application } from 'pixi.js';
-import { Rect } from './primitives';
+import { Application, type ApplicationOptions } from 'pixi.js';
+import { Camera } from './camera';
+import { EventBus } from './event-bus';
+import { SceneGraph } from './scene-graph';
 
+export interface EditorEvents {
+  // Define editor-specific events here
+  'editor.initialized': () => void;
+}
+
+interface EditorOptions extends Partial<ApplicationOptions> {
+  // Define editor-specific options here
+  enableGrid?: boolean;
+}
+
+const defaultEditorOptions: EditorOptions = {
+  enableGrid: true,
+};
 
 export class Editor {
   app: Application;
-  constructor() {
+  bus: EventBus;
+  camera: Camera;
+  sceneGraph: SceneGraph;
+  options: EditorOptions;
+  constructor(options: EditorOptions = defaultEditorOptions) {
     this.app = new Application();
+    this.bus = new EventBus();
+    this.sceneGraph = new SceneGraph(this);
+    this.camera = new Camera(this);
+    this.options = options;
   }
 
   init = async () => {
     // Initialization logic here
-    await this.app.init({
-      background: '#6c797c38',
-      width: 1000,
-      height: 600,
-      antialias: true,
-    });
-
-    // 在应用初始化完成后设置交互和事件监听
+    await this.app.init(this.options);
     this.app.stage.eventMode = 'static';
+    this.app.stage.interactive = true;
     this.app.stage.hitArea = this.app.screen;
-    const rect = new Rect({ x: 100, y: 100, w: 200, h: 150 });
-    this.app.stage.addChild(rect); // 添加内部容器
+    this.bus.emit('editor.initialized');
   };
 
   destroy = () => {

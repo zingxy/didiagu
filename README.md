@@ -1,23 +1,26 @@
 # didiagu
+
 图形编辑器
+
 ## TODO
+
 class Camera {}
+
+class SceneGraph {}
 
 class History {}
 
-class Selection {}
+class Tools {}
 
-class SceneGraph {}
+class Layers {}
+
+class Selection {}
 
 class Transformer {}
 
 class Keyboard {}
 
 class Shortcuts {}
-
-class Tools {}
-
-class Layers {}
 
 class Grid {}
 
@@ -28,3 +31,13 @@ class Exporter {}
 class Importer {}
 
 class Collaboration {}
+
+## 模块间通信
+
+### 依赖注入
+
+TODO
+
+### 事件总线
+
+主要用于状态更新通知
