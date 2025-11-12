@@ -1,6 +1,7 @@
 import { Application } from 'pixi.js';
 import { Rect } from './primitives';
 
+
 export class Editor {
   app: Application;
   constructor() {

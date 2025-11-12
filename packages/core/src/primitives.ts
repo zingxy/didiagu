@@ -1,18 +1,38 @@
 import { Graphics, Container } from 'pixi.js';
 import { nanoid } from 'nanoid';
 
-interface IPrimitive {
+export interface IPrimitive {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
   // uuid, 对象的唯一id, 来自前端
   uuid: string;
   // 节点类型
   type: string;
-}
+  w: number;
+  h: number;
 
-interface IMeta {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
+  // 下面几个实际上可以转换成transform matrix
+  // T
   x: number;
   y: number;
+  // R
+  rotation: number;
+  // K
+  skewX: number;
+  skewY: number;
+  // S
+  scaleX: number;
+  scaleY: number;
+}
+
+export interface IRect extends IPrimitive {
+  // corner radius
+  r: number;
+}
+
+export interface ICircle extends IPrimitive {
+  // radius
+  r: number;
 }
 
 export abstract class AbstractPrimitive
@@ -22,6 +42,8 @@ export abstract class AbstractPrimitive
   uuid: string;
   graphics: Graphics;
   abstract type: string;
+  w = 0;
+  h = 0;
   constructor() {
     super();
     this.uuid = nanoid();
@@ -30,30 +52,48 @@ export abstract class AbstractPrimitive
   }
   abstract render(): void;
 
-  _receiveUpdate() {
-    this.render();
+  get scaleX() {
+    return this.scale.x;
+  }
+  set scaleX(value: number) {
+    this.scale.x = value;
+  }
+
+  get scaleY() {
+    return this.scale.y;
+  }
+  set scaleY(value: number) {
+    this.scale.y = value;
+  }
+
+  get skewX() {
+    return this.skew.x;
+  }
+  set skewX(value: number) {
+    this.skew.x = value;
+  }
+
+  get skewY() {
+    return this.skew.y;
+  }
+  set skewY(value: number) {
+    this.skew.y = value;
   }
 }
 
-interface IRectMeta extends IMeta {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-type IRectConfig = Partial<IRectMeta>;
+type IRectConfig = Partial<IRect>;
 
-export class Rect extends AbstractPrimitive implements IRectMeta {
+export class Rect extends AbstractPrimitive implements IRect {
   type = 'rectangle';
-  w: number;
-  h: number;
+  r: number = 0;
   constructor(config: IRectConfig) {
     super();
-    this.w = config.w || 0;
-    this.h = config.h || 0;
-    this.w = config.w || 0;
-    this.h = config.h || 0;
+    Object.assign(this, config);
     this.render();
   }
-  render(): void {}
+  render(): void {
+    this.graphics.clear();
+    console.log('Rect render', this.w, this.h);
+    this.graphics.rect(0, 0, this.w, this.h).fill(0xffffff);
+  }
 }
