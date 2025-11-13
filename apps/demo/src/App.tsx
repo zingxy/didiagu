@@ -21,7 +21,7 @@ function App() {
       width: containerRef.current?.clientWidth,
       height: containerRef.current?.clientHeight,
       background: '#f0f2f5',
-      resizeTo: containerRef.current!,
+      resizeTo: containerRef.current || undefined,
     });
     editor.bus.on('editor.initialized', () => {
       editor.sceneGraph.removeChildren();
@@ -60,9 +60,9 @@ function App() {
           <Desc text={1} />
         </Splitter.Panel>
         <Splitter.Panel>
-          <div ref={containerRef} className="w-full h-full"></div>
+          <div ref={containerRef} className="w-full h-full" />
         </Splitter.Panel>
-        <Splitter.Panel min={200} max="30%" defaultSize={200}>
+        <Splitter.Panel min={300} max="30%" defaultSize={300}>
           <Desc text={3} />
         </Splitter.Panel>
       </Splitter>
