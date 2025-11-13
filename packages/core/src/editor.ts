@@ -2,6 +2,7 @@ import { Application, type ApplicationOptions } from 'pixi.js';
 import { Camera } from './camera';
 import { EventBus } from './event-bus';
 import { SceneGraph } from './scene-graph';
+import { ToolManager } from './tool-manager';
 
 export interface EditorEvents {
   // Define editor-specific events here
@@ -22,12 +23,14 @@ export class Editor {
   bus: EventBus;
   camera: Camera;
   sceneGraph: SceneGraph;
+  toolManager:ToolManager;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
     this.app = new Application();
     this.bus = new EventBus();
     this.sceneGraph = new SceneGraph(this);
     this.camera = new Camera(this);
+    this.toolManager = new ToolManager(this);
     this.options = options;
   }
 

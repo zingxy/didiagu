@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Editor, Rect } from '@didiagu/core';
 import { Flex, Splitter, Typography } from 'antd';
+import Toolbar from '@components/toolbar';
 function App() {
   const editorRef = useRef<Editor | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -66,6 +67,7 @@ function App() {
           <Desc text={3} />
         </Splitter.Panel>
       </Splitter>
+      <Toolbar />
     </>
   );
 }
