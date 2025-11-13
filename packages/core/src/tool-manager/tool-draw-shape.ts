@@ -26,16 +26,25 @@ abstract class AbstractDrawShapeTool implements ITool {
   onPointerDown(e: FederatedPointerEvent) {
     this.pressing = true;
     this.last = { x: e.global.x, y: e.global.y };
-    this.createShape();
+    this.drawingShape = this.createShape();
+    this.drawingShape.updateAttr({
+      x: this.last.x,
+      y: this.last.y,
+      w: 0,
+      h: 0,
+    });
   }
 
   onPointerMove(e: FederatedPointerEvent) {
-    if (!this.pressing || !this.last) return;
+    if (!this.pressing || !this.last || !this.drawingShape) return;
     const dx = e.global.x - this.last.x;
     const dy = e.global.y - this.last.y;
     this.delta = { x: dx, y: dy };
     this.last = { x: e.global.x, y: e.global.y };
-    this.updateShape(this.delta);
+    this.drawingShape.updateAttr({
+      w: this.drawingShape.w + dx,
+      h: this.drawingShape.h + dy,
+    });
   }
 
   onPointerUp() {
@@ -46,11 +55,10 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.pressing = false;
     this.last = null;
     this.delta = null;
+    this.drawingShape = null;
   }
   /** 创建图形 */
-  abstract createShape(): void;
-  /** 更新图形 */
-  abstract updateShape(delta: IPoint): void;
+  abstract createShape(): AbstractPrimitive;
   /** 完成图形 */
   abstract finalizeShape(): void;
 }

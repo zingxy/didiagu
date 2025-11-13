@@ -10,15 +10,22 @@ import { FederatedPointerEvent } from 'pixi.js';
 import { Editor } from '../editor';
 import type { ITool } from './types';
 import { DrawRectTool } from './tool-draw-rect';
+import { EventBus } from '../event-bus';
+export interface ToolManagerEvents {
+  'tool.changed': (toolId: string) => void;
+}
 
 // 工具管理器
 export class ToolManager {
   private tools = new Map<string, ITool>();
   private currentTool: ITool | null = null;
   private editor: Editor;
+  private bus: EventBus;
   constructor(editor: Editor) {
     this.editor = editor;
+    this.bus = editor.bus;
     this.register(new DrawRectTool(editor));
+    this.setCurrentTool('RECTANGLE');
     this.bindEvents();
   }
   bindEvents() {
@@ -38,6 +45,11 @@ export class ToolManager {
     this.currentTool?.onDeactivate?.();
     this.currentTool = nextTool;
     this.currentTool.onActivate?.();
+    this.bus.emit('tool.changed', this.currentTool.id);
+  }
+
+  getCurrentToolId() {
+    return this.currentTool?.id;
   }
 
   handlePointerDown(e: FederatedPointerEvent) {

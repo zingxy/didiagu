@@ -18,16 +18,17 @@ const defaultEditorOptions: EditorOptions = {
   enableGrid: true,
 };
 
-export class Editor {
-  app: Application;
-  bus: EventBus;
-  camera: Camera;
-  sceneGraph: SceneGraph;
-  toolManager:ToolManager;
+export class Editor extends EventBus {
+  readonly app: Application;
+  readonly bus: EventBus;
+  readonly camera: Camera;
+  readonly sceneGraph: SceneGraph;
+  private toolManager: ToolManager;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
+    super();
     this.app = new Application();
-    this.bus = new EventBus();
+    this.bus = this;
     this.sceneGraph = new SceneGraph(this);
     this.camera = new Camera(this);
     this.toolManager = new ToolManager(this);
@@ -40,7 +41,15 @@ export class Editor {
     this.app.stage.eventMode = 'static';
     this.app.stage.interactive = true;
     this.app.stage.hitArea = this.app.screen;
-    this.bus.emit('editor.initialized');
+    this.emit('editor.initialized');
+  };
+
+  setCurrentTool = (toolId: string) => {
+    this.toolManager.setCurrentTool(toolId);
+  };
+
+  getCurrentToolId = () => {
+    return this.toolManager.getCurrentToolId();
   };
 
   destroy = () => {

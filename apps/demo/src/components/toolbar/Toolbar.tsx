@@ -1,5 +1,4 @@
 import * as React from 'react';
-import { useState } from 'react';
 import {
   DesignModeIcon,
   DevModeIcon,
@@ -16,7 +15,8 @@ import {
 import { Popover } from 'antd';
 
 import clsx from 'clsx';
-import { ToolType } from '@didiagu/core';
+import type { ToolType } from '@didiagu/core';
+import { useAppState } from '@/store';
 
 interface ToolbarIconProps {
   selected?: boolean;
@@ -62,13 +62,13 @@ const ModeSwitcher: React.FC = () => {
 
 interface ToolbarConfig {
   icon: React.ReactNode;
-  name: ToolType;
+  name: ToolType | string;
 }
 
-const tools = [
+const tools: ToolbarConfig[] = [
   { icon: <SelectToolIcon />, name: 'Select' },
   { icon: <FrameToolIcon />, name: 'Frame' },
-  { icon: <RectToolIcon />, name: 'Rectangle' },
+  { icon: <RectToolIcon />, name: 'RECTANGLE' },
   { icon: <PenToolIcon />, name: 'Pen' },
   { icon: <TextToolIcon />, name: 'Text' },
   { icon: <CommentToolIcon />, name: 'Comment' },
@@ -76,16 +76,16 @@ const tools = [
 ];
 
 const ToolSelector: React.FC = () => {
-  const [selectedTool, setSelectedTool] = useState<string>('Select');
+  const { currentToolId, setCurrentToolId } = useAppState();
   return (
     <div className="flex-1 flex justify-between items-center items-center p-1 rounded-md">
       {tools.map((tool) => {
         return (
           <ToolbarToolIcon
-            selected={selectedTool === tool.name}
+            selected={currentToolId === tool.name}
             key={tool.name}
             name={tool.name}
-            onClick={() => setSelectedTool(tool.name)}
+            onClick={() => setCurrentToolId(tool.name)}
           >
             {tool.icon}
           </ToolbarToolIcon>

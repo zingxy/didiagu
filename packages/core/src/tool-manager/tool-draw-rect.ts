@@ -12,16 +12,10 @@ export class DrawRectTool extends AbstractDrawShapeTool {
     return this.drawingShape;
   }
 
-  override updateShape(delta: IPoint): void {
-    if (!this.drawingShape) return;
-    this.drawingShape.w += delta.x;
-    this.drawingShape.h += delta.y;
-    this.drawingShape.render();
-  }
-
   override finalizeShape(): void {
     // Implementation for finalizing the rectangle shape
     if (!this.drawingShape) return;
     this.editor.sceneGraph.addChild(this.drawingShape);
+    this.drawingShape = null;
   }
 }

@@ -2,12 +2,10 @@ import { Graphics, Container } from 'pixi.js';
 import { nanoid } from 'nanoid';
 
 export interface IPrimitive {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  [key: string]: any;
   // uuid, 对象的唯一id, 来自前端
-  uuid: string;
+  readonly uuid: string;
   // 节点类型
-  type: string;
+  readonly type: string;
   w: number;
   h: number;
 
@@ -79,6 +77,11 @@ export abstract class AbstractPrimitive
   set skewY(value: number) {
     this.skew.y = value;
   }
+
+  updateAttr(attr: Partial<Omit<IPrimitive, 'uuid' | 'type'>>) {
+    Object.assign(this, attr);
+    this.render();
+  }
 }
 
 type IRectConfig = Partial<IRect>;
@@ -93,9 +96,9 @@ export class Rect extends AbstractPrimitive implements IRect {
     this.interactive = true;
     this.render();
   }
+
   render(): void {
     this.graphics.clear();
-    console.log('Rect render', this.w, this.h);
     this.graphics.rect(0, 0, this.w, this.h).fill(0xffffff);
   }
 }

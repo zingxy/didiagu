@@ -23,7 +23,6 @@ export class SceneGraph {
     this.bus.on('camera.changed', this.onCameraChanged.bind(this));
   }
   onCameraChanged(matrix: Matrix) {
-    console.log('SceneGraph onCameraChanged:', matrix);
     this.stage.localTransform = matrix;
   }
 
