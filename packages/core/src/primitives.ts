@@ -69,6 +69,8 @@ export abstract class AbstractPrimitive
     this.uuid = nanoid();
     this.graphics = new Graphics();
     this.addChild(this.graphics);
+    this.eventMode = 'static';
+    this.interactive = true;
     // outline graphics sits above the main graphics and is used for hover outline
     this.outlineGraphics = new Graphics();
     // ensure outline doesn't block pointer events on children
@@ -119,6 +121,7 @@ export abstract class AbstractPrimitive
    * Default implementation draws a rectangle outline.
    */
   drawOutline(show = true) {
+    console.log('defaut drawOutline', show);
     this.outlineGraphics.clear();
     if (!show) return;
 
@@ -160,8 +163,6 @@ export class Ellipse extends AbstractPrimitive implements IEllipse {
   constructor(config: IEllipseConfig) {
     super();
     Object.assign(this, config);
-    this.eventMode = 'static';
-    this.interactive = true;
     this.render();
   }
 
@@ -178,6 +179,7 @@ export class Ellipse extends AbstractPrimitive implements IEllipse {
   }
 
   override drawOutline(show = true): void {
+    console.log('ellipse drawOutline', show);
     this.outlineGraphics.clear();
     if (!show) return;
 
