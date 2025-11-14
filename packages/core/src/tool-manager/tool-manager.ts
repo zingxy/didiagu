@@ -10,6 +10,8 @@ import { FederatedPointerEvent } from 'pixi.js';
 import { Editor } from '../editor';
 import type { ITool } from './types';
 import { DrawRectTool } from './tool-draw-rect';
+import { DrawEllipseTool } from './tool-draw-ellipse ';
+import { DrawFrameTool } from './tool-draw-frame';
 import { EventBus } from '../event-bus';
 export interface ToolManagerEvents {
   'tool.changed': (toolId: string) => void;
@@ -19,19 +21,13 @@ export interface ToolManagerEvents {
 export class ToolManager {
   private tools = new Map<string, ITool>();
   private currentTool: ITool | null = null;
-  private editor: Editor;
   private bus: EventBus;
   constructor(editor: Editor) {
-    this.editor = editor;
     this.bus = editor.bus;
     this.register(new DrawRectTool(editor));
-    this.setCurrentTool('RECTANGLE');
-    this.bindEvents();
-  }
-  bindEvents() {
-    this.editor.app.stage.on('pointerdown', this.handlePointerDown.bind(this));
-    this.editor.app.stage.on('pointermove', this.handlePointerMove.bind(this));
-    this.editor.app.stage.on('pointerup', this.handlePointerUp.bind(this));
+    this.register(new DrawEllipseTool(editor));
+    this.register(new DrawFrameTool(editor));
+    this.setCurrentTool('FRAME');
   }
 
   register(tool: ITool) {
@@ -52,18 +48,24 @@ export class ToolManager {
     return this.currentTool?.id;
   }
 
-  handlePointerDown(e: FederatedPointerEvent) {
+  /** 处理指针按下事件 - 由 Editor 调用 */
+  handlePointerDown(e: FederatedPointerEvent): boolean {
     this.currentTool?.onPointerDown?.(e);
+    return true; // 工具处理了事件
   }
 
-  handlePointerMove(e: FederatedPointerEvent) {
+  /** 处理指针移动事件 - 由 Editor 调用 */
+  handlePointerMove(e: FederatedPointerEvent): boolean {
     this.currentTool?.onPointerMove?.(e);
+    return true; // 工具处理了事件
   }
 
-  handlePointerUp(e: FederatedPointerEvent) {
+  /** 处理指针释放事件 - 由 Editor 调用 */
+  handlePointerUp(e: FederatedPointerEvent): boolean {
     this.currentTool?.onPointerUp?.(e);
+    return true; // 工具处理了事件
   }
 }
 
-type Tools = [DrawRectTool];
+type Tools = [DrawRectTool, DrawEllipseTool, DrawFrameTool];
 export type ToolType = Tools[number]['id'];

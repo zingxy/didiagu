@@ -11,6 +11,7 @@ import {
   ActionToolIcon,
   CommentToolIcon,
 } from '@icons';
+import { useEffect } from 'react';
 
 import { Popover } from 'antd';
 
@@ -67,16 +68,27 @@ interface ToolbarConfig {
 
 const tools: ToolbarConfig[] = [
   { icon: <SelectToolIcon />, name: 'Select' },
-  { icon: <FrameToolIcon />, name: 'Frame' },
+  { icon: <FrameToolIcon />, name: 'FRAME' },
   { icon: <RectToolIcon />, name: 'RECTANGLE' },
   { icon: <PenToolIcon />, name: 'Pen' },
   { icon: <TextToolIcon />, name: 'Text' },
   { icon: <CommentToolIcon />, name: 'Comment' },
-  { icon: <ActionToolIcon />, name: 'Actions' },
+  { icon: <ActionToolIcon />, name: 'ELLIPSE' },
 ];
 
 const ToolSelector: React.FC = () => {
-  const { currentToolId, setCurrentToolId } = useAppState();
+  const { currentToolId, editor, setCurrentToolId } = useAppState();
+
+  useEffect(() => {
+    const handleToolChange = (toolId: string) => {
+      setCurrentToolId(toolId);
+    };
+    editor?.on('tool.changed', handleToolChange);
+    return () => {
+      editor?.off('tool.changed', handleToolChange);
+    };
+  }, [editor, setCurrentToolId]);
+
   return (
     <div className="flex-1 flex justify-between items-center items-center p-1 rounded-md">
       {tools.map((tool) => {
@@ -85,7 +97,7 @@ const ToolSelector: React.FC = () => {
             selected={currentToolId === tool.name}
             key={tool.name}
             name={tool.name}
-            onClick={() => setCurrentToolId(tool.name)}
+            onClick={() => editor?.setCurrentTool(tool.name)}
           >
             {tool.icon}
           </ToolbarToolIcon>

@@ -1,12 +1,12 @@
-import { Rect } from '../primitives';
+import { Frame } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
 
-export class DrawRectTool extends AbstractDrawShapeTool {
-  readonly id = 'RECTANGLE';
-  readonly desc = 'Draw Rectangle';
+export class DrawFrameTool extends AbstractDrawShapeTool {
+  readonly id = 'FRAME';
+  readonly desc = 'Draw Frame';
 
   override createShape() {
-    return new Rect({});
+    return new Frame({});
   }
 
   override finalizeShape(): void {

@@ -41,3 +41,9 @@ TODO
 ### 事件总线
 
 主要用于状态更新通知
+
+## 命名约定
+
+- 除 React Component, 文件命名 snake-case
+- 常量全部大写
+- 接口带前缀 I

@@ -11,6 +11,7 @@ import EventEmitter from 'eventemitter3';
 import { CameraEvents } from './camera';
 import { EditorEvents } from './editor';
 import { ToolManagerEvents } from './tool-manager/tool-manager';
+import { SceneGraphEvents } from './scene-graph';
 
 type AnyEvent = {
   // copy from pixijs
@@ -18,13 +19,16 @@ type AnyEvent = {
   // eslint-disable-next-line
   [K: ({} & string) | ({} & symbol)]: any;
 };
-type EventMap = AnyEvent & CameraEvents & EditorEvents & ToolManagerEvents;
+type DidiaguEvents = AnyEvent &
+  CameraEvents &
+  EditorEvents &
+  ToolManagerEvents &
+  SceneGraphEvents;
 
-export class EventBus extends EventEmitter<EventMap> {
+export class EventBus extends EventEmitter<DidiaguEvents> {
   constructor() {
     super();
   }
 }
 
 export const bus = new EventBus();
-

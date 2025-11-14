@@ -7,11 +7,14 @@ abstract class AbstractDrawShapeTool implements ITool {
   abstract readonly id: string;
   abstract readonly desc: string;
 
-  pressing = false;
-  last: IPoint | null = null;
-  delta: IPoint | null = null;
-  drawingShape: AbstractPrimitive | null = null;
-  editor: Editor;
+  private pressing = false;
+  private last: IPoint | null = null;
+  private delta: IPoint | null = null;
+  // 当前正在绘制的矩形
+  private drawingShape: AbstractPrimitive | null = null;
+  private editor: Editor;
+  // 图形计数器
+  private counter: number = 0;
   constructor(editor: Editor) {
     this.editor = editor;
   }
@@ -24,12 +27,17 @@ abstract class AbstractDrawShapeTool implements ITool {
   }
 
   onPointerDown(e: FederatedPointerEvent) {
+    if (e.button !== 0) return; // only left button
     this.pressing = true;
     this.last = { x: e.global.x, y: e.global.y };
     this.drawingShape = this.createShape();
+    this.counter++;
+    this.editor.sceneGraph.addChild(this.drawingShape);
+    const stage = this.editor.sceneGraph.stage;
+    const localPos = stage.toLocal({ x: this.last.x, y: this.last.y });
     this.drawingShape.updateAttr({
-      x: this.last.x,
-      y: this.last.y,
+      x: localPos.x,
+      y: localPos.y,
       w: 0,
       h: 0,
     });
@@ -37,8 +45,13 @@ abstract class AbstractDrawShapeTool implements ITool {
 
   onPointerMove(e: FederatedPointerEvent) {
     if (!this.pressing || !this.last || !this.drawingShape) return;
-    const dx = e.global.x - this.last.x;
-    const dy = e.global.y - this.last.y;
+    const stage = this.editor.sceneGraph.stage;
+    const currentLocal = stage.toLocal({ x: e.global.x, y: e.global.y });
+    const lastLocal = stage.toLocal({ x: this.last.x, y: this.last.y });
+
+    const dx = currentLocal.x - lastLocal.x;
+    const dy = currentLocal.y - lastLocal.y;
+
     this.delta = { x: dx, y: dy };
     this.last = { x: e.global.x, y: e.global.y };
     this.drawingShape.updateAttr({

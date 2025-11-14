@@ -1,11 +1,20 @@
 import { Graphics, Container } from 'pixi.js';
 import { nanoid } from 'nanoid';
 
-export interface IPrimitive {
-  // uuid, 对象的唯一id, 来自前端
+export const PRIMITIVE_MAP = {
+  RECTANGLE: 'RECTANGLE',
+  ELLIPSE: 'ELLIPSE',
+  FRAME: 'FRAME',
+} as const;
+
+export type PrimitiveType = (typeof PRIMITIVE_MAP)[keyof typeof PRIMITIVE_MAP];
+
+export interface IBasePrimitive {
+  // uuid, 对象的唯一id
   readonly uuid: string;
   // 节点类型
-  readonly type: string;
+  readonly type: PrimitiveType;
+  title: string;
   w: number;
   h: number;
 
@@ -21,32 +30,53 @@ export interface IPrimitive {
   // S
   scaleX: number;
   scaleY: number;
+  // fill
+  fills: string;
+  // stroke
+  strokes: string;
 }
 
-export interface IRect extends IPrimitive {
-  // corner radius
+export interface IRect extends IBasePrimitive {
+  type: 'RECTANGLE';
   r: number;
 }
 
-export interface ICircle extends IPrimitive {
-  // radius
-  r: number;
+export interface IEllipse extends IBasePrimitive {
+  type: 'ELLIPSE';
 }
+
+export interface IFrame extends IBasePrimitive {
+  type: 'FRAME';
+}
+
+export type IPrimitive = IEllipse | IRect | IFrame;
 
 export abstract class AbstractPrimitive
   extends Container
-  implements IPrimitive
+  implements IBasePrimitive
 {
+  abstract readonly type: PrimitiveType;
   uuid: string;
   graphics: Graphics;
-  abstract type: string;
+  outlineGraphics: Graphics;
   w = 0;
   h = 0;
+  fills = 'grey';
+  strokes = '';
+  title = '';
   constructor() {
     super();
     this.uuid = nanoid();
     this.graphics = new Graphics();
     this.addChild(this.graphics);
+    // outline graphics sits above the main graphics and is used for hover outline
+    this.outlineGraphics = new Graphics();
+    // ensure outline doesn't block pointer events on children
+    this.outlineGraphics.interactive = false;
+    this.addChild(this.outlineGraphics);
+    // show outline on hover
+    this.on('pointerover', () => this.drawOutline(true));
+    this.on('pointerout', () => this.drawOutline(false));
   }
   abstract render(): void;
 
@@ -78,16 +108,30 @@ export abstract class AbstractPrimitive
     this.skew.y = value;
   }
 
-  updateAttr(attr: Partial<Omit<IPrimitive, 'uuid' | 'type'>>) {
+  updateAttr(attr: Partial<Omit<IBasePrimitive, 'uuid' | 'type'>>) {
     Object.assign(this, attr);
     this.render();
+  }
+
+  /**
+   * Draw or clear an outline for hover state.
+   * Subclasses can override this method to provide custom outline shapes.
+   * Default implementation draws a rectangle outline.
+   */
+  drawOutline(show = true) {
+    this.outlineGraphics.clear();
+    if (!show) return;
+
+    // Default implementation: draw a rectangle outline
+    this.outlineGraphics.rect(0, 0, this.w, this.h);
+    this.outlineGraphics.stroke('#1890ff');
   }
 }
 
 type IRectConfig = Partial<IRect>;
 
 export class Rect extends AbstractPrimitive implements IRect {
-  type = 'rectangle';
+  readonly type = PRIMITIVE_MAP.RECTANGLE;
   r: number = 0;
   constructor(config: IRectConfig) {
     super();
@@ -99,6 +143,72 @@ export class Rect extends AbstractPrimitive implements IRect {
 
   render(): void {
     this.graphics.clear();
-    this.graphics.rect(0, 0, this.w, this.h).fill(0xffffff);
+    this.graphics.rect(0, 0, this.w, this.h);
+    if (this.strokes) {
+      this.graphics.stroke(this.strokes);
+    }
+    if (this.fills) {
+      this.graphics.fill(this.fills);
+    }
+  }
+}
+
+type IEllipseConfig = Partial<IEllipse>;
+
+export class Ellipse extends AbstractPrimitive implements IEllipse {
+  readonly type = PRIMITIVE_MAP.ELLIPSE;
+  constructor(config: IEllipseConfig) {
+    super();
+    Object.assign(this, config);
+    this.eventMode = 'static';
+    this.interactive = true;
+    this.render();
+  }
+
+  override render(): void {
+    this.graphics.clear();
+    this.graphics.ellipse(this.w / 2, this.h / 2, this.w / 2, this.h / 2);
+
+    if (this.strokes) {
+      this.graphics.stroke(this.strokes);
+    }
+    if (this.fills) {
+      this.graphics.fill(this.fills);
+    }
+  }
+
+  override drawOutline(show = true): void {
+    this.outlineGraphics.clear();
+    if (!show) return;
+
+    this.outlineGraphics.ellipse(
+      this.w / 2,
+      this.h / 2,
+      this.w / 2,
+      this.h / 2
+    );
+    this.outlineGraphics.stroke('#1890ff');
+  }
+}
+
+type IFrameConfig = Partial<IFrame>;
+
+export class Frame extends AbstractPrimitive implements IFrame {
+  readonly type = PRIMITIVE_MAP.FRAME;
+  constructor(config: IFrameConfig) {
+    super();
+    Object.assign(this, config);
+    this.fills = 'white';
+    this.render();
+  }
+  render(): void {
+    this.graphics.clear();
+    this.graphics.rect(0, 0, this.w, this.h);
+    if (this.strokes) {
+      this.graphics.stroke(this.strokes);
+    }
+    if (this.fills) {
+      this.graphics.fill(this.fills);
+    }
   }
 }

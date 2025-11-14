@@ -1,8 +1,9 @@
 import { useEffect, useRef } from 'react';
-import { Editor, Rect } from '@didiagu/core';
+import { Editor } from '@didiagu/core';
 import { Flex, Splitter, Typography } from 'antd';
 import Toolbar from '@components/toolbar';
 import { useAppState } from '@/store';
+import SceneTree from '@components/scene-tree/SceneTree';
 function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { editor, setEditor, setCurrentToolId } = useAppState((state) => state);
@@ -24,11 +25,7 @@ function App() {
     newEditor.on('editor.initialized', () => {
       const currentToolId = newEditor.getCurrentToolId();
       setCurrentToolId(currentToolId || null);
-
       newEditor.sceneGraph.removeChildren();
-      newEditor.sceneGraph.addChild(
-        new Rect({ x: 100, y: 100, w: -200, h: -150 })
-      );
     });
 
     newEditor.init().then(() => {
@@ -56,7 +53,7 @@ function App() {
     <>
       <Splitter className="h-screen" style={{ height: '100vh' }}>
         <Splitter.Panel min={200} max="30%" defaultSize={200}>
-          <Desc text={1} />
+          <SceneTree />
         </Splitter.Panel>
         <Splitter.Panel>
           <div ref={containerRef} className="w-full h-full" />

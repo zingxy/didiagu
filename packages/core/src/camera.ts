@@ -26,48 +26,52 @@ export class Camera {
   /** 编辑器舞台容器 */
   private stage: PIXI.Container;
   private eventBus: EventBus;
-  /** 相机的变换矩阵: p_world = transform * p_camera */
+  /** 相机的变换矩阵: p_camera = transform * p_world */
   transform: Matrix = new Matrix();
   isPressing: boolean = false;
   last?: Point | null = null;
 
   constructor(editor: Editor) {
-    this.stage = editor.app.stage;
     this.eventBus = editor.bus;
-    this.bindEvents();
+    this.stage = editor.sceneGraph.stage;
   }
 
-  bindEvents() {
-    this.stage.on('pointerdown', this.down, this);
-    this.stage.on('pointermove', this.move, this);
-    this.stage.on('pointerup', this.up, this);
-    this.stage.on('wheel', this.wheel, this);
-    this.stage.on("pointerupoutside", this.up, this);
-  }
-
-  down = (e: PIXI.FederatedPointerEvent) => {
-    this.isPressing = true;
-    this.last = { x: e.global.x, y: e.global.y };
-    console.log('Camera pointer down:', e);
+  /** 处理指针按下事件 - 由 Editor 调用 */
+  handlePointerDown = (e: PIXI.FederatedPointerEvent): boolean => {
+    // 中键拖动或者空格键+左键拖动
+    if (e.button === 1 || (e.button === 0 && e.getModifierState?.('Space'))) {
+      this.isPressing = true;
+      this.last = { x: e.global.x, y: e.global.y };
+      return true; // 事件已处理
+    }
+    return false; // 事件未处理，传递给工具
   };
-  move = (e: PIXI.FederatedPointerEvent) => {
-    if (!this.isPressing || !this.last) return;
+
+  /** 处理指针移动事件 - 由 Editor 调用 */
+  handlePointerMove = (e: PIXI.FederatedPointerEvent): boolean => {
+    if (!this.isPressing || !this.last) return false;
 
     const dx = e.global.x - this.last.x;
     const dy = e.global.y - this.last.y;
 
-    // const delta = new Matrix().translate(dx, dy);
-
     this.transform.translate(dx, dy);
     this.eventBus.emit('camera.changed', this.transform.clone());
     this.last = { x: e.global.x, y: e.global.y };
+    return true; // 事件已处理
   };
-  up = (e: PIXI.FederatedEvent) => {
-    this.isPressing = false;
-    this.last = null;
-    console.log('Camera pointer up:', e);
+
+  /** 处理指针释放事件 - 由 Editor 调用 */
+  handlePointerUp = (): boolean => {
+    if (this.isPressing) {
+      this.isPressing = false;
+      this.last = null;
+      return true; // 事件已处理
+    }
+    return false; // 事件未处理
   };
+
   wheel = (e: PIXI.FederatedWheelEvent) => {
+    // 滚轮缩放时重置拖动状态
     this.isPressing = false;
     this.last = null;
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;

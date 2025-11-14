@@ -1,12 +1,12 @@
-import { Rect } from '../primitives';
+import { Ellipse } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
 
-export class DrawRectTool extends AbstractDrawShapeTool {
-  readonly id = 'RECTANGLE';
-  readonly desc = 'Draw Rectangle';
+export class DrawEllipseTool extends AbstractDrawShapeTool {
+  readonly id = 'ELLIPSE';
+  readonly desc = 'Draw Ellipse';
 
   override createShape() {
-    return new Rect({});
+    return new Ellipse({});
   }
 
   override finalizeShape(): void {
