@@ -4,6 +4,7 @@ import { Flex, Splitter, Typography } from 'antd';
 import Toolbar from '@components/toolbar';
 import { useAppState } from '@/store';
 import SceneTree from '@components/scene-tree/SceneTree';
+import Inspector from '@components/inspector/Inspector';
 function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { editor, setEditor, setCurrentToolId } = useAppState((state) => state);
@@ -58,7 +59,7 @@ function App() {
         <Splitter.Panel>
           <div ref={containerRef} className="w-full h-full" />
         </Splitter.Panel>
-        <Splitter.Panel min={300} max="30%" defaultSize={300}>
+        <Splitter.Panel min={200} max="30%" defaultSize={200}>
           <Desc text={3} />
         </Splitter.Panel>
       </Splitter>
@@ -73,7 +74,7 @@ const Desc: React.FC<Readonly<{ text?: string | number }>> = (props) => (
       level={5}
       style={{ whiteSpace: 'nowrap' }}
     >
-      Panel {props.text}
+      <Inspector />
     </Typography.Title>
   </Flex>
 );
