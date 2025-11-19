@@ -1,7 +1,6 @@
 import { DidiaguPointerEvent } from '../dispatcher';
 import { Editor } from '../editor';
 import { AbstractPrimitive } from '../primitives';
-import { keyPressed } from '../which-key-pressed';
 import type { ITool } from './types';
 
 export class SelectTool implements ITool {
@@ -28,9 +27,9 @@ export class SelectTool implements ITool {
     }
     const primitive = e.target as AbstractPrimitive;
     const selectionManager = this.editor.selectionManager;
-    const shiftKey = e.shiftKey;
-    if (!shiftKey) {
-      selectionManager.delectAll();
+    const multiSelect = e.shiftKey;
+    if (!multiSelect) {
+      selectionManager.deselectAll();
     } else {
       if (selectionManager.isSelected(primitive)) {
         selectionManager.deselect([primitive]);

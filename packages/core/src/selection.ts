@@ -44,12 +44,12 @@ export class SelectionManager {
     }
     this.effect();
   }
-  delectAll() {
+  deselectAll() {
     for (const primitive of this.selected) {
-      this.selected.delete(primitive);
       this.deselected.add(primitive);
     }
     this.selected.clear();
+    this.effect();
   }
 
   isSelected(primitive: AbstractPrimitive): boolean {
@@ -58,11 +58,6 @@ export class SelectionManager {
 
   effect() {
     this.outlineGraphics.clear();
-    if (this.selected.size === 0) {
-      this.outlineGraphics.visible = false;
-      return;
-    }
-
     this.bus.emit('selection.changed', Array.from(this.selected));
     for (const primitive of this.selected) {
       this.outlineGraphics.resetTransform();
