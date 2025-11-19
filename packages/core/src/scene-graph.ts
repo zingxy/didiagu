@@ -144,10 +144,6 @@ export class SceneGraph {
       if (child instanceof AbstractPrimitive) {
         children.push(this.map(child, callback));
       } else {
-        console.warn(
-          'Skipping non-primitive child in scene graph mapping',
-          child
-        );
         continue;
       }
     }

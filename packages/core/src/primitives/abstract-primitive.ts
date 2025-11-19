@@ -1,6 +1,6 @@
 import { Graphics, Container } from 'pixi.js';
 import { nanoid } from 'nanoid';
-import { BASE_INSPECTOR_FIELDS, InspectorField } from './inspector';
+import { BASE_INSPECTOR_FIELDS, InspectorSection } from './inspector';
 
 export const PRIMITIVE_MAP = {
   RECTANGLE: 'RECTANGLE',
@@ -135,7 +135,7 @@ export abstract class AbstractPrimitive
   /**
    * 获取属性面板字段schema
    */
-  getInspectorFields(): InspectorField[] {
+  getInspectorFields(): InspectorSection[] {
     return BASE_INSPECTOR_FIELDS;
   }
   /**

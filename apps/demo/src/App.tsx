@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Editor } from '@didiagu/core';
-import { Flex, Splitter, Typography } from 'antd';
+import { Splitter } from 'antd';
 import Toolbar from '@components/toolbar';
 import { useAppState } from '@/store';
 import SceneTree from '@components/scene-tree/SceneTree';
@@ -53,30 +53,19 @@ function App() {
   return (
     <>
       <Splitter className="h-screen" style={{ height: '100vh' }}>
-        <Splitter.Panel min={200} max="30%" defaultSize={200}>
+        <Splitter.Panel min={200} max="30%" defaultSize={300} resizable>
           <SceneTree />
         </Splitter.Panel>
         <Splitter.Panel>
           <div ref={containerRef} className="w-full h-full" />
         </Splitter.Panel>
-        <Splitter.Panel min={200} max="30%" defaultSize={200}>
-          <Desc text={3} />
+        <Splitter.Panel min={200} max="30%" defaultSize={300} resizable={false}>
+          <Inspector />
         </Splitter.Panel>
       </Splitter>
       <Toolbar />
     </>
   );
 }
-const Desc: React.FC<Readonly<{ text?: string | number }>> = (props) => (
-  <Flex justify="center" align="center" style={{ height: '100%' }}>
-    <Typography.Title
-      type="secondary"
-      level={5}
-      style={{ whiteSpace: 'nowrap' }}
-    >
-      <Inspector />
-    </Typography.Title>
-  </Flex>
-);
 
 export default App;

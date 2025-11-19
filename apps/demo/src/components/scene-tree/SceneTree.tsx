@@ -39,6 +39,9 @@ const SHAPE_MAP: Record<PrimitiveType, { icon: React.ReactNode }> = {
 export default function SceneTree() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const editor = useAppState((state) => state.editor);
+  const selection = useAppState((state) => state.selection);
+  const selectedKeys = selection.map((item) => item.uuid);
+  console.log('SceneTree render', selectedKeys);
   useEffect(() => {
     if (!editor) return;
     const onDescendantChanged = (children: AbstractPrimitive[]) => {
@@ -50,6 +53,7 @@ export default function SceneTree() {
       editor.off('scene.descendantChanged', onDescendantChanged);
     };
   }, [editor]);
+
   const data = editor?.sceneGraph.map<TreeDataNode>(
     editor.sceneGraph.getDefaultLayer(),
     (node) => {
@@ -69,6 +73,7 @@ export default function SceneTree() {
   };
   return (
     <Tree
+      multiple
       showIcon
       showLine
       defaultExpandAll
@@ -77,6 +82,7 @@ export default function SceneTree() {
       autoExpandParent
       treeData={[root]}
       switcherIcon={<DownOutlined />}
+      selectedKeys={selectedKeys}
     />
   );
 }
