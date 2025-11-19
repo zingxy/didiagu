@@ -36,7 +36,7 @@ export class Editor extends EventBus {
     this.bus = this;
     this.sceneGraph = new SceneGraph(this, this.app.stage);
     this.camera = new Camera(this);
-    this.dispatcher = new Dispatcher(this.sceneGraph);
+    this.dispatcher = new Dispatcher(this.app.stage);
     this.toolManager = new ToolManager(this);
     this.selectionManager = new SelectionManager(this);
     this.options = { ...defaultEditorOptions, ...options };

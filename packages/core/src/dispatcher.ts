@@ -7,7 +7,6 @@
  */
 
 import * as PIXI from 'pixi.js';
-import { SceneGraph } from './scene-graph';
 
 export type DidiaguPointerEvent = PIXI.FederatedPointerEvent;
 export type DidiaguWheelEvent = PIXI.FederatedWheelEvent;
@@ -59,7 +58,6 @@ export interface IEventHandler {
    * @returns true 表示事件已处理，false 表示传递给下一个处理器
    */
   onKeyUp?(e: KeyboardEvent): boolean | void;
-  
 }
 
 /**
@@ -67,10 +65,10 @@ export interface IEventHandler {
  */
 export class Dispatcher {
   private handlers: IEventHandler[] = [];
-  private world: SceneGraph['world'];
+  private world: PIXI.Container;
 
-  constructor(scneneGraph: SceneGraph) {
-    this.world = scneneGraph.world;
+  constructor(world: PIXI.Container) {
+    this.world = world;
     this.bindEvents();
   }
 
