@@ -65,8 +65,8 @@ export class ToolManager implements IEventHandler {
     this.currentTool?.onPointerUp?.(e);
     return true; // 工具处理了事件
   }
-  onClick(e: DidiaguPointerEvent): boolean | void {
-    this.currentTool?.onClick?.(e);
+  singleSelect(e: DidiaguPointerEvent): boolean | void {
+    this.currentTool?.singleSelect?.(e);
     return true; // 工具处理了事件
   }
 }

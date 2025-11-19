@@ -27,6 +27,13 @@ const SHAPE_MAP: Record<PrimitiveType, { icon: React.ReactNode }> = {
       </span>
     ),
   },
+  LAYER: {
+    icon: (
+      <span className="w-full h-full flex justify-center items-center">
+        <RectToolIcon />
+      </span>
+    ),
+  },
 };
 
 export default function SceneTree() {
@@ -43,13 +50,22 @@ export default function SceneTree() {
       editor.off('scene.descendantChanged', onDescendantChanged);
     };
   }, [editor]);
+  const data = editor?.sceneGraph.map<TreeDataNode>(
+    editor.sceneGraph.getDefaultLayer(),
+    (node) => {
+      return {
+        icon: SHAPE_MAP[node.type].icon,
+        key: node.uuid,
+        title: node.type,
+        // children: [], // 会被 map 方法自动填充
+      };
+    }
+  );
 
-  const data = editor ? editor.sceneGraph.getSceneTreeRoot().children.map(dfs) : [];
-  console.log('scene tree data', data);
-  const root = {
+  const root: TreeDataNode = {
     key: 'root',
     title: 'Scene',
-    children: data,
+    children: data ? data.children : [],
   };
   return (
     <Tree
@@ -63,28 +79,4 @@ export default function SceneTree() {
       switcherIcon={<DownOutlined />}
     />
   );
-}
-
-function dfs(root: AbstractPrimitive): TreeDataNode {
-  switch (root.type) {
-    case 'RECTANGLE':
-    case 'ELLIPSE':
-      return {
-        icon: SHAPE_MAP[root.type].icon,
-        key: root.uuid,
-        title: root.type,
-        children: [],
-      };
-    case 'FRAME':
-      return {
-        icon: SHAPE_MAP[root.type].icon,
-        key: root.uuid,
-        title: root.type,
-        children: root.children
-          .filter((c) => c instanceof AbstractPrimitive)
-          .map(dfs),
-      };
-    default:
-      throw new Error(`Unknown primitive type: ${root.type}`);
-  }
 }

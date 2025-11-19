@@ -56,6 +56,10 @@ export class SelectionManager {
     return this.selected.has(primitive);
   }
 
+  selectBox({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
+    // TODO 框选逻辑
+  }
+
   effect() {
     this.outlineGraphics.clear();
     this.bus.emit('selection.changed', Array.from(this.selected));

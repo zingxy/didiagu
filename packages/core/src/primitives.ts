@@ -5,6 +5,7 @@ export const PRIMITIVE_MAP = {
   RECTANGLE: 'RECTANGLE',
   ELLIPSE: 'ELLIPSE',
   FRAME: 'FRAME',
+  LAYER: 'LAYER',
 } as const;
 
 export const OUTLINE_COLOR = '#1890ff';
@@ -118,14 +119,18 @@ export abstract class AbstractPrimitive
   }
 
   /**
-   * Draw or clear an outline for hover state.
+   * 绘制高亮轮廓，比如悬浮或选中时使用。
    * Subclasses can override this method to provide custom outline shapes.
    * Default implementation draws a rectangle outline.
    */
   drawOutline(graphics: Graphics): void {
-    graphics.beginPath();
-    graphics.rect(0, 0, this.w, this.h);
-    graphics.stroke(OUTLINE_COLOR);
+    graphics.beginPath().rect(0, 0, this.w, this.h).stroke(OUTLINE_COLOR);
+  }
+  /**
+   * 是否是叶子节点
+   */
+  isLeaf(): boolean {
+    return true;
   }
 }
 
@@ -197,7 +202,10 @@ export class Frame extends AbstractPrimitive implements IFrame {
     this.addChild(this.maskGraphics);
     this.render();
   }
-  render(): void {
+  override isLeaf(): boolean {
+    return false;
+  }
+  override render(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
     this.maskGraphics.clear();
@@ -210,5 +218,46 @@ export class Frame extends AbstractPrimitive implements IFrame {
     if (this.fills) {
       this.graphics.fill(this.fills);
     }
+  }
+}
+
+export interface LayerConfig {
+  /** 图层 ID */
+  id: string;
+  /** 图层名称 */
+  name: string;
+  /** 是否可见 */
+  visible?: boolean;
+  /** 是否锁定（不可编辑） */
+  locked?: boolean;
+  /** z-index，用于排序 */
+  zIndex?: number;
+  /** 是否可记录历史 */
+  trackable?: boolean;
+}
+/**
+ * 图层类,逻辑层，不作为渲染节点
+ */
+export class Layer extends AbstractPrimitive {
+  public id: string;
+  public name: string;
+  public locked: boolean = false;
+  public trackable: boolean = true;
+  readonly type = PRIMITIVE_MAP.LAYER;
+  constructor(config: LayerConfig) {
+    super();
+    this.id = config.id;
+    this.name = config.name;
+    this.visible = config.visible ?? true;
+    this.locked = config.locked ?? false;
+    this.zIndex = config.zIndex ?? 0;
+    this.sortableChildren = true;
+    this.trackable = config.trackable ?? true;
+  }
+  override render(): void {
+    // 图层不需要渲染
+  }
+  override isLeaf(): boolean {
+    return false;
   }
 }

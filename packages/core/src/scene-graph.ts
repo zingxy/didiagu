@@ -9,10 +9,11 @@
 import { Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
+import { AbstractPrimitive, Layer, LayerConfig } from './primitives';
 
 export interface SceneGraphEvents {
   /** 场景树节点增加或删除 */
-  'scene.descendantChanged': (children: PIXI.Container[]) => void;
+  'scene.descendantChanged': (children: AbstractPrimitive[]) => void;
 }
 
 export class SceneGraph {
@@ -23,7 +24,7 @@ export class SceneGraph {
    */
   private readonly world: PIXI.Container;
   /** 场景内容容器，会应用 camera 变换，业务应用的根容器，它的自接子元素是Layer */
-  private readonly stage: PIXI.Container<PIXI.Container>;
+  private readonly stage: PIXI.Container<Layer>;
   private readonly layerManager: LayerManager;
   constructor(editor: Editor, world: PIXI.Container) {
     this.bus = editor.bus;
@@ -62,7 +63,10 @@ export class SceneGraph {
         throw new Error(`Layer "${layerId}" not found`);
       }
       if (layer.trackable) {
-        this.bus.emit('scene.descendantChanged', children);
+        this.bus.emit(
+          'scene.descendantChanged',
+          children as AbstractPrimitive[]
+        );
       }
       return layer.addChild(...children);
     } else {
@@ -74,15 +78,25 @@ export class SceneGraph {
         throw new Error(`Parent container is not inside any layer`);
       }
       if (layer.trackable) {
-        this.bus.emit('scene.descendantChanged', children);
+        this.bus.emit(
+          'scene.descendantChanged',
+          children as AbstractPrimitive[]
+        );
       }
       return parent.addChild(...children);
     }
   }
 
-  removeChild = (...children: PIXI.Container[]) => {
-    this.bus.emit('scene.descendantChanged', children);
-    return this.stage.removeChild(...children);
+  removeChild = (...children: AbstractPrimitive[]) => {
+    const removedChildren = [];
+    for (const child of children) {
+      const layer = this.layerManager.findParentLayer(child);
+      if (layer && layer.trackable) {
+        removedChildren.push(child);
+      }
+      child.parent?.removeChild(child);
+    }
+    this.bus.emit('scene.descendantChanged', removedChildren);
   };
   removeChildren = (...args: Parameters<PIXI.Container['removeChildren']>) => {
     this.bus.emit('scene.descendantChanged', this.stage.children);
@@ -91,24 +105,55 @@ export class SceneGraph {
   toLocal: PIXI.Container['toLocal'] = (...args) => {
     return this.stage.toLocal(...args);
   };
-  getSceneTreeRoot(): PIXI.Container {
+  getDefaultLayer(): Layer {
     return this.layerManager.getLayer('default')!;
   }
-}
-
-export interface LayerConfig {
-  /** 图层 ID */
-  id: string;
-  /** 图层名称 */
-  name: string;
-  /** 是否可见 */
-  visible?: boolean;
-  /** 是否锁定（不可编辑） */
-  locked?: boolean;
-  /** z-index，用于排序 */
-  zIndex?: number;
-  /** 是否可记录历史 */
-  trackable?: boolean;
+  getSceneTreeRoot(): PIXI.Container {
+    return this.stage;
+  }
+  traverse(
+    root: AbstractPrimitive,
+    callback: (node: AbstractPrimitive) => void
+  ): void {
+    callback(root);
+    // base case
+    if (root.isLeaf()) {
+      return;
+    }
+    // make progress
+    for (const child of root.children) {
+      if (child instanceof AbstractPrimitive) {
+        this.traverse(child, callback);
+      }
+    }
+  }
+  // 将layer trees转换成其它树
+  map<T extends { children?: T[] }>(
+    root: AbstractPrimitive,
+    callback: (node: AbstractPrimitive) => T
+  ): T {
+    const newRoot = callback(root);
+    // base case
+    if (root.isLeaf()) {
+      return newRoot;
+    }
+    // make progress
+    // 非叶子节点，递归处理子节点
+    const children = [] as T[];
+    for (const child of root.children) {
+      if (child instanceof AbstractPrimitive) {
+        children.push(this.map(child, callback));
+      } else {
+        console.warn(
+          'Skipping non-primitive child in scene graph mapping',
+          child
+        );
+        continue;
+      }
+    }
+    newRoot.children = children;
+    return newRoot;
+  }
 }
 
 export interface LayerManagerEvents {
@@ -122,26 +167,6 @@ export interface LayerManagerEvents {
   'layer.reordered': (layers: Layer[]) => void;
   /** 当前激活图层变更 */
   'layer.activeChanged': (layer: Layer | null) => void;
-}
-/**
- * 图层类,逻辑层，不作为渲染节点
- */
-export class Layer extends PIXI.Container {
-  public id: string;
-  public name: string;
-  public locked: boolean = false;
-  public trackable: boolean = true;
-
-  constructor(config: LayerConfig) {
-    super();
-    this.id = config.id;
-    this.name = config.name;
-    this.visible = config.visible ?? true;
-    this.locked = config.locked ?? false;
-    this.zIndex = config.zIndex ?? 0;
-    this.sortableChildren = true;
-    this.trackable = config.trackable ?? true;
-  }
 }
 
 export class LayerManager {
