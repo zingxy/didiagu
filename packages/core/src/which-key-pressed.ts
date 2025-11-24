@@ -32,6 +32,18 @@ class KeyPressed {
   public get space() {
     return this.isPressed(' ');
   }
+  public get shift() {
+    return this.isPressed('Shift');
+  }
+  public get ctrl() {
+    return this.isPressed('Control');
+  }
+  public get alt() {
+    return this.isPressed('Alt');
+  }
+  public get meta() {
+    return this.isPressed('Meta');
+  }
 }
 
 export const keyPressed = new KeyPressed();

@@ -1,5 +1,17 @@
 import { Ellipse } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
+import { registerActions } from '../action-manager';
+registerActions({
+  name: 'tool-draw-ellipse',
+  label: 'Draw Ellipse',
+  perform: (/* manager */ { editor }) => {
+    // Implementation for activating the draw rectangle tool
+    editor.setCurrentTool('ELLIPSE');
+  },
+  keyTest: (e: KeyboardEvent) => {
+    return e.key.toLowerCase() === 'o';
+  },
+});
 
 export class DrawEllipseTool extends AbstractDrawShapeTool {
   readonly id = 'ELLIPSE';

@@ -5,6 +5,7 @@ import { SceneGraph } from './scene-graph';
 import { ToolManager } from './tool-manager';
 import { Dispatcher } from './dispatcher';
 import { SelectionManager } from './selection';
+import { ActionManager } from './action-manager';
 
 export interface EditorEvents {
   // Define editor-specific events here
@@ -29,6 +30,7 @@ export class Editor extends EventBus {
   public readonly toolManager: ToolManager;
   public readonly dispatcher: Dispatcher;
   public readonly selectionManager: SelectionManager;
+  public readonly actionManager: ActionManager;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
     super();
@@ -39,6 +41,8 @@ export class Editor extends EventBus {
     this.dispatcher = new Dispatcher(this.app.stage);
     this.toolManager = new ToolManager(this);
     this.selectionManager = new SelectionManager(this);
+    this.actionManager = new ActionManager(this);
+
     this.options = { ...defaultEditorOptions, ...options };
 
     this.dispatcher.addHandler(this.camera, this.toolManager);
@@ -49,9 +53,8 @@ export class Editor extends EventBus {
     await this.app.init(this.options);
     this.app.stage.eventMode = 'static';
     this.app.stage.interactive = true;
-    // 设置一个足够大的 hitArea，覆盖整个应用区域
-    // 注意：这是相对于 app.view 的，不受 stage.localTransform 影响
     this.app.stage.hitArea = this.app.screen;
+    this.actionManager.registerActions();
     this.emit('editor.initialized');
   };
 

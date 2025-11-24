@@ -1,5 +1,18 @@
 import { Rect } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
+import { registerActions } from '../action-manager';
+
+registerActions({
+  name: 'tool-draw-rect',
+  label: 'Draw Rectangle',
+  perform: (/* manager */ { editor }) => {
+    // Implementation for activating the draw rectangle tool
+    editor.setCurrentTool('RECTANGLE');
+  },
+  keyTest: (e: KeyboardEvent) => {
+    return e.key.toLowerCase() === 'r';
+  },
+});
 
 export class DrawRectTool extends AbstractDrawShapeTool {
   readonly id = 'RECTANGLE';

@@ -2,6 +2,19 @@ import { DidiaguPointerEvent } from '../dispatcher';
 import { Editor } from '../editor';
 import { AbstractPrimitive, Rect } from '../primitives';
 import type { ITool } from './types';
+import { registerActions } from '../action-manager';
+
+registerActions({
+  name: 'tool-select',
+  label: 'Select Tool',
+  perform: (/* manager */ { editor }) => {
+    // Implementation for activating the select tool
+    editor.setCurrentTool('SELECT');
+  },
+  keyTest: (e: KeyboardEvent) => {
+    return e.key.toLowerCase() === 'v';
+  },
+});
 
 export class SelectTool implements ITool {
   readonly id = 'SELECT';
