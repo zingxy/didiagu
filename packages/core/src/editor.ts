@@ -58,6 +58,9 @@ export class Editor extends EventBus {
     this.emit('editor.initialized');
   };
 
+  /**
+   * @param toolId 工具id
+   */
   setCurrentTool = (toolId: string) => {
     this.toolManager.setCurrentTool(toolId);
   };

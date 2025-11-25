@@ -1,7 +1,7 @@
 import { Ellipse } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
-import { registerActions } from '../action-manager';
-registerActions({
+import { registerAction } from '../action-manager';
+registerAction({
   name: 'tool-draw-ellipse',
   label: 'Draw Ellipse',
   perform: (/* manager */ { editor }) => {

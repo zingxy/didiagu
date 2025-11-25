@@ -1,8 +1,8 @@
 import { Rect } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
-import { registerActions } from '../action-manager';
+import { registerAction } from '../action-manager';
 
-registerActions({
+registerAction({
   name: 'tool-draw-rect',
   label: 'Draw Rectangle',
   perform: (/* manager */ { editor }) => {

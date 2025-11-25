@@ -9,8 +9,8 @@ interface Action {
 }
 export const preloadActions: Action[] = [];
 
-export const registerActions = (...newActions: Action[]) => {
-  preloadActions.push(...newActions);
+export const registerAction = (newAction: Action) => {
+  preloadActions.push(newAction);
 };
 export class ActionManager {
   private actions: Map<string, Action>;

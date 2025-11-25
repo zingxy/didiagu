@@ -2,9 +2,9 @@ import { DidiaguPointerEvent } from '../dispatcher';
 import { Editor } from '../editor';
 import { AbstractPrimitive, Rect } from '../primitives';
 import type { ITool } from './types';
-import { registerActions } from '../action-manager';
+import { registerAction } from '../action-manager';
 
-registerActions({
+registerAction({
   name: 'tool-select',
   label: 'Select Tool',
   perform: (/* manager */ { editor }) => {

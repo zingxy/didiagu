@@ -14,7 +14,7 @@ import { DrawEllipseTool } from './tool-draw-ellipse ';
 import { DrawFrameTool } from './tool-draw-frame';
 import { SelectTool } from './tool-select';
 import { EventBus } from '../event-bus';
-import { DidiaguPointerEvent, IEventHandler } from '../dispatcher';
+import { IEventHandler } from '../dispatcher';
 export interface ToolManagerEvents {
   'tool.changed': (toolId: string) => void;
 }
@@ -63,10 +63,6 @@ export class ToolManager implements IEventHandler {
 
   onPointerUp(e: FederatedPointerEvent): boolean {
     this.currentTool?.onPointerUp?.(e);
-    return true; // 工具处理了事件
-  }
-  singleSelect(e: DidiaguPointerEvent): boolean | void {
-    this.currentTool?.singleSelect?.(e);
     return true; // 工具处理了事件
   }
 }

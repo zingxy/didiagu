@@ -1,7 +1,7 @@
 import { Frame } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
-import { registerActions } from '../action-manager';
-registerActions({
+import { registerAction } from '../action-manager';
+registerAction({
   name: 'tool-draw-frame',
   label: 'Draw Frame',
   perform: (/* manager */ { editor }) => {
