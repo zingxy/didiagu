@@ -52,8 +52,17 @@ export class SelectionManager {
     this.effect();
   }
 
-  isSelected(primitive: AbstractPrimitive): boolean {
-    return this.selected.has(primitive);
+  selectAll() {
+    const arr: AbstractPrimitive[] = [];
+    this.editor.sceneGraph.traverse(
+      this.editor.sceneGraph.getDefaultLayer(),
+      (node) => {
+        if (node instanceof AbstractPrimitive) {
+          arr.push(node);
+        }
+      }
+    );
+    this.select(arr);
   }
 
   selectBox({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {

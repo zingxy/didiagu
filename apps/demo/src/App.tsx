@@ -5,6 +5,7 @@ import Toolbar from '@components/toolbar';
 import { useAppState } from '@/store';
 import SceneTree from '@components/scene-tree/SceneTree';
 import Inspector from '@components/inspector/Inspector';
+import { ContextMenu } from './components/context-menu';
 function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { editor, setEditor, setCurrentToolId } = useAppState((state) => state);
@@ -57,7 +58,9 @@ function App() {
           <SceneTree />
         </Splitter.Panel>
         <Splitter.Panel>
-          <div ref={containerRef} className="w-full h-full" />
+          <ContextMenu>
+            <div ref={containerRef} className="w-full h-full" />
+          </ContextMenu>
         </Splitter.Panel>
         <Splitter.Panel min={200} max="30%" defaultSize={300} resizable={false}>
           <Inspector />

@@ -58,6 +58,12 @@ export interface IEventHandler {
    * @returns true 表示事件已处理，false 表示传递给下一个处理器
    */
   onKeyUp?(e: KeyboardEvent): boolean | void;
+
+  /**
+   * 处理右键菜单事件 
+   * @param e 
+   */
+  onContextMenu?(e: MouseEvent): boolean | void;
 }
 
 /**
@@ -66,8 +72,10 @@ export interface IEventHandler {
 export class Dispatcher {
   private handlers: IEventHandler[] = [];
   private world: PIXI.Container;
+  private canvas: HTMLCanvasElement;
 
-  constructor(world: PIXI.Container) {
+  constructor(canvas: HTMLCanvasElement, world: PIXI.Container) {
+    this.canvas = canvas;
     this.world = world;
     this.bindEvents();
   }
@@ -84,14 +92,14 @@ export class Dispatcher {
    * 移除事件处理器
    * @param handler 要移除的处理器
    */
-  removeHandler(handler: IEventHandler): void {
+  private removeHandler(handler: IEventHandler): void {
     const index = this.handlers.indexOf(handler);
     if (index >= 0) {
       this.handlers.splice(index, 1);
     }
   }
 
-  bindEvents(): void {
+  private bindEvents(): void {
     this.world.on('pointerdown', (e: DidiaguPointerEvent) =>
       this.dispatchPointerDown(e)
     );
@@ -110,6 +118,11 @@ export class Dispatcher {
     window.addEventListener('keyup', (e: KeyboardEvent) =>
       this.dispatchKeyUp(e)
     );
+
+    this.canvas.addEventListener('contextmenu', (e: MouseEvent) => {
+      e.preventDefault();
+      console.log('Dispatcher contextmenu event prevented');
+    });
   }
 
   /**

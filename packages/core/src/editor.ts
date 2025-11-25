@@ -5,7 +5,7 @@ import { SceneGraph } from './scene-graph';
 import { ToolManager } from './tool-manager';
 import { Dispatcher } from './dispatcher';
 import { SelectionManager } from './selection';
-import { ActionManager } from './action-manager';
+import { ActionsManager } from './action-manager';
 
 export interface EditorEvents {
   // Define editor-specific events here
@@ -28,9 +28,9 @@ export class Editor extends EventBus {
   public readonly camera: Camera;
   public readonly sceneGraph: SceneGraph;
   public readonly toolManager: ToolManager;
-  public readonly dispatcher: Dispatcher;
+  public dispatcher?: Dispatcher;
   public readonly selectionManager: SelectionManager;
-  public readonly actionManager: ActionManager;
+  public readonly actionManager: ActionsManager;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
     super();
@@ -38,14 +38,11 @@ export class Editor extends EventBus {
     this.bus = this;
     this.sceneGraph = new SceneGraph(this, this.app.stage);
     this.camera = new Camera(this);
-    this.dispatcher = new Dispatcher(this.app.stage);
     this.toolManager = new ToolManager(this);
     this.selectionManager = new SelectionManager(this);
-    this.actionManager = new ActionManager(this);
+    this.actionManager = new ActionsManager(this);
 
     this.options = { ...defaultEditorOptions, ...options };
-
-    this.dispatcher.addHandler(this.camera, this.toolManager);
   }
 
   init = async () => {
@@ -54,7 +51,10 @@ export class Editor extends EventBus {
     this.app.stage.eventMode = 'static';
     this.app.stage.interactive = true;
     this.app.stage.hitArea = this.app.screen;
-    this.actionManager.registerActions();
+
+    this.dispatcher = new Dispatcher(this.app.canvas, this.app.stage);
+    this.dispatcher.addHandler(this.camera, this.toolManager);
+
     this.emit('editor.initialized');
   };
 
