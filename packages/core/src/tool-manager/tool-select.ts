@@ -44,11 +44,12 @@ export class SelectTool implements ITool {
     console.log(`${this.desc} tool deactivated`);
   }
   /**点选逻辑 */
-  singleSelect(e: DidiaguPointerEvent) {
+  clickSelect(e: DidiaguPointerEvent) {
     if (!(e.target instanceof AbstractPrimitive)) {
       console.log(
         'select tool clicked on non-primitive target, deselecting all'
       );
+      this.editor.selectionManager.deselectAll();
       return;
     }
     const primitive = e.target as AbstractPrimitive;
@@ -66,7 +67,7 @@ export class SelectTool implements ITool {
   }
   /**框选逻辑 */
   onPointerDown(e: DidiaguPointerEvent): boolean | void {
-    this.singleSelect(e);
+    this.clickSelect(e);
     const stagePos = this.editor.sceneGraph.toLocal(e.global);
     this.selectBox.updateAttr({
       x: stagePos.x,
