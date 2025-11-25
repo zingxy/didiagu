@@ -69,6 +69,14 @@ export class ActionsManager {
       );
       return;
     }
+    const target = e.target as HTMLElement;
+    if (
+      target.tagName === 'INPUT' ||
+      target.tagName === 'TEXTAREA' ||
+      target.isContentEditable
+    ) {
+      return;
+    }
     e.preventDefault();
     this.executeAction(filteredActions[0]);
   };
