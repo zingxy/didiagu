@@ -5,7 +5,8 @@ import Toolbar from '@components/toolbar';
 import { useAppState } from '@/store';
 import SceneTree from '@components/scene-tree/SceneTree';
 import Inspector from '@components/inspector/Inspector';
-import { ContextMenu } from './components/context-menu';
+import { CommandPalette } from '@components/command-palette';
+import { ContextMenu } from '@components/context-menu';
 function App() {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const { editor, setEditor, setCurrentToolId } = useAppState((state) => state);
@@ -67,6 +68,7 @@ function App() {
         </Splitter.Panel>
       </Splitter>
       <Toolbar />
+      <CommandPalette />
     </>
   );
 }
