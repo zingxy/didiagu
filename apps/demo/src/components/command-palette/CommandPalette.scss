@@ -57,6 +57,7 @@
   border-radius: 8px;
   font-size: 14px;
   display: flex;
+  justify-content: space-between;
   align-items: center;
   gap: 8px;
   padding: 0 16px;
@@ -98,27 +99,6 @@
   overscroll-behavior: contain;
   transition: 100ms ease;
   transition-property: height;
-}
-
-[cmdk-vercel-shortcuts] {
-  display: flex;
-  margin-left: auto;
-  gap: 8px;
-
-  kbd {
-    font-family: var(--font-sans);
-    font-size: 12px;
-    min-width: 20px;
-    padding: 4px;
-    height: 20px;
-    border-radius: 4px;
-    color: var(--gray11);
-    background: var(--gray4);
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-transform: uppercase;
-  }
 }
 
 [cmdk-separator] {
