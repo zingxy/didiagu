@@ -19,37 +19,35 @@ export class SelectionManager {
   private editor: Editor;
   private bus: Editor['bus'];
   public selected: Set<AbstractPrimitive>;
-  public deselected: Set<AbstractPrimitive>;
   private sceneGraph: Editor['sceneGraph'];
   private outlineGraphics = new Graphics();
+  private dirty = false;
 
   constructor(editor: Editor) {
     this.editor = editor;
     this.bus = editor.bus;
     this.sceneGraph = editor.sceneGraph;
     this.selected = new Set<AbstractPrimitive>();
-    this.deselected = new Set<AbstractPrimitive>();
   }
   select(primitives: AbstractPrimitive[]) {
     for (const primitive of primitives) {
+      if (this.selected.has(primitive)) continue;
       this.selected.add(primitive);
+      primitive.on('attr.changed', this.onSelectedPrimitiveAttrChanged);
+      this.selectionChange();
     }
-    this.effect();
   }
 
   deselect(primitives: AbstractPrimitive[]) {
     for (const primitive of primitives) {
+      if (!this.selected.has(primitive)) continue;
       this.selected.delete(primitive);
-      this.deselected.add(primitive);
+      primitive.off('attr.changed', this.onSelectedPrimitiveAttrChanged);
+      this.selectionChange();
     }
-    this.effect();
   }
   deselectAll() {
-    for (const primitive of this.selected) {
-      this.deselected.add(primitive);
-    }
-    this.selected.clear();
-    this.effect();
+    this.deselect(Array.from(this.selected));
   }
 
   selectAll() {
@@ -64,14 +62,36 @@ export class SelectionManager {
     );
     this.select(arr);
   }
+  selectOnly(primitive: AbstractPrimitive) {
+    this.deselectAll();
+    this.select([primitive]);
+  }
 
   selectBox({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
     // TODO 框选逻辑
   }
 
-  effect() {
+  /**
+   *
+   * @description 选区变化事件触发, 使用微任务合并多次变化,避免频繁触发selection.changed事件.
+   * 如果要实时同步选区变化,直接访问editor.selectionManager.selected.
+   */
+  selectionChange() {
+    this.feedback();
+    if (this.dirty) return;
+    this.dirty = true;
+    Promise.resolve().then(() => {
+      this.bus.emit('selection.changed', Array.from(this.selected));
+      this.dirty = false;
+    });
+  }
+
+  onSelectedPrimitiveAttrChanged = () => {
+    this.feedback();
+  };
+
+  feedback() {
     this.outlineGraphics.clear();
-    this.bus.emit('selection.changed', Array.from(this.selected));
     for (const primitive of this.selected) {
       this.outlineGraphics.resetTransform();
       this.outlineGraphics.transform(

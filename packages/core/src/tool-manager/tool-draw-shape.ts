@@ -33,6 +33,7 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.drawingShape = this.createShape();
     this.counter++;
     this.editor.sceneGraph.addChild('default', this.drawingShape);
+    this.editor.selectionManager.selectOnly(this.drawingShape);
     const stage = this.editor.sceneGraph;
     const localPos = stage.toLocal({ x: this.last.x, y: this.last.y });
     this.drawingShape.updateAttr({
@@ -87,6 +88,7 @@ abstract class AbstractDrawShapeTool implements ITool {
     }
 
     this.finalizeShape();
+    this.editor.setCurrentTool('SELECT');
 
     this.dragging = false;
     this.last = null;

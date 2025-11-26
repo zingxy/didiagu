@@ -116,6 +116,7 @@ export abstract class AbstractPrimitive
 
   updateAttr(attr: Partial<Omit<IBasePrimitive, 'uuid' | 'type'>>) {
     Object.assign(this, attr);
+    this.emit('attr.changed', attr);
     this.render();
   }
 
