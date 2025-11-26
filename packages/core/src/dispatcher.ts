@@ -1,6 +1,6 @@
 /**
  * @file dispatcher.ts
- * @description 统一转发各种画布级别事件，pixijs stage中的事件
+ * @description 统一转发各种画布级、window级、pixijs stage事件
  * @author HongQing Zeng
  * @date 2025-11-17
  * @version 1.0.0
