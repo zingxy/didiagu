@@ -52,13 +52,20 @@ export class SelectTool implements ITool {
       this.editor.selectionManager.deselectAll();
       return;
     }
+
     const primitive = e.target as AbstractPrimitive;
+    if (!primitive.selectable) {
+      console.log(
+        'select tool clicked on non-selectionable primitive, do nothing'
+      );
+      return;
+    }
     const selectionManager = this.editor.selectionManager;
     const multiSelect = e.shiftKey;
     if (!multiSelect) {
       selectionManager.deselectAll();
     } else {
-      if (selectionManager.isSelected(primitive)) {
+      if (selectionManager.selected.has(primitive)) {
         selectionManager.deselect([primitive]);
         return;
       }

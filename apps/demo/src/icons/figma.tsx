@@ -6,17 +6,10 @@
  * @version 1.0.0
  */
 
-interface IconProps {
-  fill?: string;
-  size?: number | string;
-}
-
-const defalutIconProps: IconProps = {
-  fill: 'currentColor',
-  size: '1em',
-};
+import type { IconProps } from './icon';
+import { defaultIconProps } from './icon';
 export const FreeDrawModeIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -31,7 +24,7 @@ export const FreeDrawModeIcon = (props: IconProps) => {
 };
 
 export const DesignModeIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -49,7 +42,7 @@ export const DesignModeIcon = (props: IconProps) => {
 };
 
 export const DevModeIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -64,7 +57,7 @@ export const DevModeIcon = (props: IconProps) => {
 };
 
 export const SelectToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -78,7 +71,7 @@ export const SelectToolIcon = (props: IconProps) => {
   );
 };
 export const FrameToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -96,7 +89,7 @@ export const FrameToolIcon = (props: IconProps) => {
   );
 };
 export const RectToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -114,7 +107,7 @@ export const RectToolIcon = (props: IconProps) => {
   );
 };
 export const PenToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -129,7 +122,7 @@ export const PenToolIcon = (props: IconProps) => {
 };
 
 export const TextToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -147,7 +140,7 @@ export const TextToolIcon = (props: IconProps) => {
   );
 };
 export const CommentToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}
@@ -165,7 +158,7 @@ export const CommentToolIcon = (props: IconProps) => {
   );
 };
 export const ActionToolIcon = (props: IconProps) => {
-  const { fill, size } = { ...defalutIconProps, ...props };
+  const { fill, size } = { ...defaultIconProps, ...props };
   return (
     <svg
       width={size}

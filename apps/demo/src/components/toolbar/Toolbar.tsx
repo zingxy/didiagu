@@ -10,6 +10,7 @@ import {
   TextToolIcon,
   ActionToolIcon,
   CommentToolIcon,
+  TopoGraphIcon,
 } from '@icons';
 import { useEffect } from 'react';
 
@@ -31,11 +32,14 @@ const ToolbarToolIcon: React.FC<React.PropsWithChildren<ToolbarIconProps>> = ({
   onClick,
   name,
 }) => {
-  const classnames = clsx('text-3xl cursor-pointer  rounded-md p-1', {
-    'text-white': selected,
-    'bg-blue-500': selected,
-    'hover:bg-slate-100': !selected,
-  });
+  const classnames = clsx(
+    'text-3xl cursor-pointer  rounded-md p-1 inline-block',
+    {
+      'text-white': selected,
+      'bg-blue-500': selected,
+      'hover:bg-slate-100': !selected,
+    }
+  );
   return (
     <Popover trigger="hover" content={name}>
       <span className={classnames} onClick={onClick}>
@@ -72,6 +76,7 @@ const tools: ToolbarConfig[] = [
   { icon: <RectToolIcon />, name: 'RECTANGLE' },
   { icon: <PenToolIcon />, name: 'Pen' },
   { icon: <TextToolIcon />, name: 'Text' },
+  { icon: <TopoGraphIcon />, name: 'Graph' },
   { icon: <CommentToolIcon />, name: 'Comment' },
   { icon: <ActionToolIcon />, name: 'ELLIPSE' },
 ];

@@ -1,2 +1,2 @@
-// eslint-disable-next-line
 export * from './figma';
+export * from './carbon';

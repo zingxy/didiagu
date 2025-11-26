@@ -7,6 +7,7 @@ export const PRIMITIVE_MAP = {
   ELLIPSE: 'ELLIPSE',
   FRAME: 'FRAME',
   LAYER: 'LAYER',
+  TRANSFORMER: 'TRANSFORMER',
 } as const;
 
 export const OUTLINE_COLOR = '#1890ff';
@@ -17,7 +18,7 @@ export interface IBasePrimitive {
   // uuid, 对象的唯一id
   readonly uuid: string;
   // 节点类型
-  readonly type: PrimitiveType;
+  readonly type: string;
   title: string;
   w: number;
   h: number;
@@ -37,6 +38,8 @@ export interface IBasePrimitive {
   fills: string;
   // stroke
   strokes: string;
+  // 是否可选中
+  selectable: boolean;
 }
 
 export interface IRect extends IBasePrimitive {
@@ -58,7 +61,7 @@ export abstract class AbstractPrimitive
   extends Container
   implements IBasePrimitive
 {
-  abstract readonly type: PrimitiveType;
+  abstract readonly type: string;
   uuid: string;
   graphics: Graphics;
   axis: Graphics;
@@ -67,6 +70,10 @@ export abstract class AbstractPrimitive
   fills = 'grey';
   strokes = '';
   title = '';
+  /**
+   * 是否可选中
+   */
+  selectable = true;
   constructor() {
     super();
     this.uuid = nanoid();

@@ -8,6 +8,7 @@
 import { Graphics } from 'pixi.js';
 import { Editor } from './editor';
 import { AbstractPrimitive } from './primitives';
+import { Transformer } from './primitives/shape-transformer';
 
 export interface SelectionManagerEvents {
   /** 选区变化 */
@@ -21,6 +22,7 @@ export class SelectionManager {
   public selected: Set<AbstractPrimitive>;
   private sceneGraph: Editor['sceneGraph'];
   private outlineGraphics = new Graphics();
+  private transformer = new Transformer();
   private dirty = false;
 
   constructor(editor: Editor) {
@@ -28,6 +30,7 @@ export class SelectionManager {
     this.bus = editor.bus;
     this.sceneGraph = editor.sceneGraph;
     this.selected = new Set<AbstractPrimitive>();
+    this.sceneGraph.addChild('helper', this.transformer);
   }
   select(primitives: AbstractPrimitive[]) {
     for (const primitive of primitives) {
@@ -77,7 +80,8 @@ export class SelectionManager {
    * 如果要实时同步选区变化,直接访问editor.selectionManager.selected.
    */
   selectionChange() {
-    this.feedback();
+    this.updateOutline();
+    this.updateTransformer();
     if (this.dirty) return;
     this.dirty = true;
     Promise.resolve().then(() => {
@@ -87,10 +91,11 @@ export class SelectionManager {
   }
 
   onSelectedPrimitiveAttrChanged = () => {
-    this.feedback();
+    this.updateOutline();
+    this.updateTransformer();
   };
 
-  feedback() {
+  updateOutline() {
     this.outlineGraphics.clear();
     for (const primitive of this.selected) {
       this.outlineGraphics.resetTransform();
@@ -103,5 +108,9 @@ export class SelectionManager {
       primitive.drawOutline(this.outlineGraphics);
     }
     this.sceneGraph.addChild('helper', this.outlineGraphics);
+  }
+  updateTransformer() {
+    console.log('updateTransformer', this.selected.size);
+    this.transformer.update(Array.from(this.selected));
   }
 }
