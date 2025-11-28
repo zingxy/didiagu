@@ -314,21 +314,61 @@ export class Transformer extends AbstractPrimitive {
     }
     this.visible = true;
 
-    const bounds = this.selectedPrimitives[0].getBounds().clone();
-    bounds.applyMatrix(this.parent!.worldTransform.clone().invert());
+    const selectedPrimitive = this.selectedPrimitives[0];
 
-    const x = bounds.minX;
-    const y = bounds.minY;
-    const w = bounds.maxX - bounds.minX;
-    const h = bounds.maxY - bounds.minY;
-    this.setFromMatrix(new Matrix());
-    this.updateLocalTransform();
-    this.updateAttr({
-      x,
-      y,
-      w,
-      h,
-    });
+    // 获取选中元素的本地边界框（原始尺寸，未应用变换）
+    const localBounds = selectedPrimitive.getLocalBounds();
+
+    // 获取选中元素在其父级坐标系中的变换矩阵
+    const primitiveLocalTransform = selectedPrimitive.localTransform.clone();
+
+    // 获取选中元素父级的世界变换矩阵
+    const primitiveParentWorld =
+      selectedPrimitive.parent!.worldTransform.clone();
+
+    // 获取 transformer 父级的世界变换矩阵的逆矩阵
+    const transformerParentInverse =
+      this.parent!.worldTransform.clone().invert();
+
+    // 组合变换：primitive.local -> primitive.parent(world) -> transformer.parent
+    const combinedTransform = primitiveLocalTransform
+      .clone()
+      .append(primitiveParentWorld)
+      .append(transformerParentInverse);
+
+    // 变换本地边界框的四个角点到 transformer 父级坐标系
+    const corners = [
+      combinedTransform.apply({ x: localBounds.minX, y: localBounds.minY }),
+      combinedTransform.apply({ x: localBounds.maxX, y: localBounds.minY }),
+      combinedTransform.apply({ x: localBounds.maxX, y: localBounds.maxY }),
+      combinedTransform.apply({ x: localBounds.minX, y: localBounds.maxY }),
+    ];
+
+    // 从第一个角点（左上角）提取位置
+    const topLeft = corners[0];
+    const topRight = corners[1];
+
+    // 计算 transformer 的位置（左上角）
+    const x = topLeft.x;
+    const y = topLeft.y;
+
+    // 计算旋转角度（从左上角到右上角的向量）
+    const rotation = Math.atan2(topRight.y - topLeft.y, topRight.x - topLeft.x);
+
+    // 计算宽度和高度（原始尺寸）
+    const w = localBounds.maxX - localBounds.minX;
+    const h = localBounds.maxY - localBounds.minY;
+
+    // 直接设置 transformer 的变换属性
+    this.position.set(x, y);
+    this.rotation = rotation;
+    this.scale.set(1, 1);
+    this.skew.set(0, 0);
+
+    // 更新尺寸并重新渲染
+    this.w = w;
+    this.h = h;
+    this.render();
   }
 
   getContext(currentInWorld: IPoint): IContext {
@@ -339,21 +379,20 @@ export class Transformer extends AbstractPrimitive {
     const lastInTransformer = this.toLocal(lastInWorld);
     const currentInTransformer = this.toLocal(currentInWorld);
 
-    const bottomRightCorner = transformerParent.toLocal(
-      {
-        x: this.handleMap['bottom-right'].x,
-        y: this.handleMap['bottom-right'].y,
-      },
+    // 计算 transformer 四个角点在父级坐标系中的位置
+    const topLeft = transformerParent.toLocal({ x: 0, y: 0 }, this);
+    const bottomRight = transformerParent.toLocal(
+      { x: this.w, y: this.h },
       this
     );
 
     return {
       transformer: this,
       boundingBoxInParent: new Bounds(
-        this.x,
-        this.y,
-        bottomRightCorner.x,
-        bottomRightCorner.y
+        topLeft.x,
+        topLeft.y,
+        bottomRight.x,
+        bottomRight.y
       ),
       /**
        * why boundingBoxInTransformer is (0,0,w,h) ?
@@ -369,8 +408,8 @@ export class Transformer extends AbstractPrimitive {
       currentInWorld,
       currentInTransformer,
       pivotInWorld: this.toGlobal({
-        x: this.x + this.w / 2,
-        y: this.y + this.h / 2,
+        x: this.w / 2,
+        y: this.h / 2,
       }),
       pivotInParent: transformerParent.toLocal(
         {
