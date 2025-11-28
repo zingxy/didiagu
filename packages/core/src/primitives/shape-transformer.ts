@@ -4,13 +4,23 @@ import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
 
 interface IContext {
-  lastWorld: IPoint;
-  lastLocal: IPoint;
-  currentWorld: IPoint;
-  currentLocal: IPoint;
-  pviotWorld: IPoint;
-  pivotLocal: IPoint;
-  boundingBox: Bounds;
+  lastInWorld: IPoint;
+  lastInParent: IPoint;
+  lastInTransformer: IPoint;
+
+  currentInWorld: IPoint;
+  currentInParent: IPoint;
+  currentInTransformer: IPoint;
+
+  pivotInWorld: IPoint;
+  pivotInParent: IPoint;
+
+  boundingBoxInParent: Bounds;
+  boundingBoxInTransformer: Bounds;
+  transformer: Transformer;
+  /** the **delta** matrix which will apply to the transformer,
+   * which means this is a matrix defined in transformers's parent coordinate system.
+   * */
   updater: (deltaMatrix: Matrix) => void;
 }
 interface IHandleConfig {
@@ -20,7 +30,65 @@ interface IHandleConfig {
   onPointermove?(context: IContext): void;
   onPointerup?(context: Partial<IContext>): void;
 }
+/**
+ * @description 将子元素的变换增量转换为父元素的变换增量，相似矩阵
+ * @param childDelta
+ * @param localTransform
+ * @returns
+ */
+const childDeltaToParentDelta = (
+  childDelta: Matrix,
+  localTransform: Matrix
+) => {
+  return localTransform
+    .clone()
+    .append(childDelta)
+    .append(localTransform.clone().invert());
+};
 
+// 缩放配置类型
+interface ScaleConfig {
+  getScaleX?: (dx: number, w: number) => number;
+  getScaleY?: (dy: number, h: number) => number;
+  getPivot: (bounds: {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+  }) => { x: number; y: number };
+}
+
+// 通用缩放处理函数
+function createScaleHandler(config: ScaleConfig) {
+  return function (context: IContext) {
+    const {
+      lastInTransformer,
+      currentInTransformer,
+      boundingBoxInTransformer: { minX, minY, maxX, maxY },
+    } = context;
+
+    const dx = currentInTransformer.x - lastInTransformer.x;
+    const dy = currentInTransformer.y - lastInTransformer.y;
+    const w = maxX - minX;
+    const h = maxY - minY;
+
+    const scaleX = config.getScaleX ? config.getScaleX(dx, w) : 1;
+    const scaleY = config.getScaleY ? config.getScaleY(dy, h) : 1;
+    const pivot = config.getPivot({ minX, minY, maxX, maxY });
+
+    const t = new Matrix().translate(pivot.x, pivot.y);
+    const invertT = t.clone().invert();
+    const s = new Matrix().scale(scaleX, scaleY);
+    const deltaMatrixInTransformer = t.append(s).append(invertT);
+
+    context.updater(
+      childDeltaToParentDelta(
+        deltaMatrixInTransformer,
+        context.transformer.localTransform
+      )
+    );
+  };
+}
 type HandleType =
   | 'top-left'
   | 'top-middle'
@@ -40,69 +108,84 @@ const handles: IHandleConfig[] = [
     getPosition() {
       return { x: -offset, y: -offset };
     },
-    onPointermove(context) {
-      const {
-        lastLocal,
-        currentLocal,
-        boundingBox: { minY, minX, maxX, maxY },
-      } = context;
-      const dx = currentLocal.x - lastLocal.x;
-      const dy = currentLocal.y - lastLocal.y;
-      const w = maxX - minX;
-      const h = maxY - minY;
-      const scaleX = (w - dx) / w;
-      const scaleY = (h - dy) / h;
-
-      const pivot = { x: maxX, y: maxY };
-
-      const t = new Matrix().translate(pivot.x, pivot.y);
-      const invertT = t.clone().invert();
-      const s = new Matrix().scale(scaleX, scaleY);
-      const deltaMatrix = t.append(s).append(invertT);
-      context.updater(deltaMatrix);
-    },
+    onPointermove: createScaleHandler({
+      getScaleX: (dx, w) => (w - dx) / w,
+      getScaleY: (dy, h) => (h - dy) / h,
+      getPivot: ({ maxX, maxY }) => ({ x: maxX, y: maxY }),
+    }),
   },
   {
     handleType: 'top-middle',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w / 2 - offset, y: -offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleY: (dy, h) => (h - dy) / h,
+      getPivot: ({ minX, maxX, maxY }) => ({ x: (minX + maxX) / 2, y: maxY }),
+    }),
   },
   {
     handleType: 'top-right',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w - offset, y: -offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleX: (dx, w) => (w + dx) / w,
+      getScaleY: (dy, h) => (h - dy) / h,
+      getPivot: ({ minX, maxY }) => ({ x: minX, y: maxY }),
+    }),
   },
   {
     handleType: 'middle-right',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w - offset, y: primitive.h / 2 - offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleX: (dx, w) => (w + dx) / w,
+      getPivot: ({ minX, minY, maxY }) => ({ x: minX, y: (minY + maxY) / 2 }),
+    }),
   },
   {
     handleType: 'bottom-right',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w, y: primitive.h };
+      return { x: primitive.w - offset, y: primitive.h - offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleX: (dx, w) => (w + dx) / w,
+      getScaleY: (dy, h) => (h + dy) / h,
+      getPivot: ({ minX, minY }) => ({ x: minX, y: minY }),
+    }),
   },
   {
     handleType: 'bottom-middle',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w / 2 - offset, y: primitive.h - offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleY: (dy, h) => (h + dy) / h,
+      getPivot: ({ minX, minY, maxX }) => ({ x: (minX + maxX) / 2, y: minY }),
+    }),
   },
   {
     handleType: 'bottom-left',
     getPosition(primitive: AbstractPrimitive) {
       return { x: -offset, y: primitive.h - offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleX: (dx, w) => (w - dx) / w,
+      getScaleY: (dy, h) => (h + dy) / h,
+      getPivot: ({ minY, maxX }) => ({ x: maxX, y: minY }),
+    }),
   },
   {
     handleType: 'middle-left',
     getPosition(primitive: AbstractPrimitive) {
       return { x: -offset, y: primitive.h / 2 - offset };
     },
+    onPointermove: createScaleHandler({
+      getScaleX: (dx, w) => (w - dx) / w,
+      getPivot: ({ minY, maxX, maxY }) => ({ x: maxX, y: (minY + maxY) / 2 }),
+    }),
   },
   {
     handleType: 'rotate',
@@ -110,20 +193,20 @@ const handles: IHandleConfig[] = [
       return { x: primitive.w / 2 - offset, y: -40 - offset };
     },
     onPointermove(context) {
-      const { pivotLocal, currentLocal, lastLocal } = context;
+      const { pivotInParent, currentInParent, lastInParent } = context;
       const v1 = {
-        x: lastLocal.x - pivotLocal.x,
-        y: lastLocal.y - pivotLocal.y,
+        x: lastInParent.x - pivotInParent.x,
+        y: lastInParent.y - pivotInParent.y,
       };
       const v2 = {
-        x: currentLocal.x - pivotLocal.x,
-        y: currentLocal.y - pivotLocal.y,
+        x: currentInParent.x - pivotInParent.x,
+        y: currentInParent.y - pivotInParent.y,
       };
       const angle1 = Math.atan2(v1.y, v1.x);
       const angle2 = Math.atan2(v2.y, v2.x);
       const deltaAngle = angle2 - angle1;
 
-      const t = new Matrix().translate(pivotLocal.x, pivotLocal.y);
+      const t = new Matrix().translate(pivotInParent.x, pivotInParent.y);
       const invertT = t.clone().invert();
       const r = new Matrix().rotate(deltaAngle);
       const deltaMatrix = t.append(r).append(invertT);
@@ -136,9 +219,9 @@ const handles: IHandleConfig[] = [
       return { x: primitive.w / 2 - offset, y: primitive.h / 2 - offset };
     },
     onPointermove(context) {
-      const { lastLocal, currentLocal } = context;
-      const dx = currentLocal.x - lastLocal.x;
-      const dy = currentLocal.y - lastLocal.y;
+      const { lastInParent, currentInParent } = context;
+      const dx = currentInParent.x - lastInParent.x;
+      const dy = currentInParent.y - lastInParent.y;
       const deltaMatrix = new Matrix().translate(dx, dy);
       context.updater(deltaMatrix);
     },
@@ -180,14 +263,17 @@ export class Handler extends Rect {
   }
 }
 
+/**
+ * any transformation (scale/rotate/move) apply to Transformer will apply to selected primitives
+ * @see {@link Transformer.applyTransform} to update selected primitives
+ */
 export class Transformer extends AbstractPrimitive {
   override readonly type = 'TRANSFORMER';
   private selectedPrimitives: AbstractPrimitive[] = [];
   private handleMap = {} as Record<HandleType, Handler>;
   private dragging = false;
-  private lastWorld: IPoint | null = null;
+  private lastInWorld: IPoint | null = null;
   private activeHandle: Handler | null = null;
-
   constructor() {
     super();
     // 确保事件可以触发
@@ -203,6 +289,7 @@ export class Transformer extends AbstractPrimitive {
       );
       this.addChild(this.handleMap[handle.handleType]);
     }
+
     this.update([]);
 
     this.on('pointerdown', this.onPointerdown);
@@ -227,24 +314,30 @@ export class Transformer extends AbstractPrimitive {
     }
     this.visible = true;
 
-    const first = this.selectedPrimitives[0];
-    this.updateAttr({
-      x: first.x,
-      y: first.y,
-      w: first.w,
-      h: first.h,
-      scaleX: first.scaleX,
-      scaleY: first.scaleY,
+    const bounds = this.selectedPrimitives[0].getBounds().clone();
+    bounds.applyMatrix(this.parent!.worldTransform.clone().invert());
 
-      rotation: first.rotation,
+    const x = bounds.minX;
+    const y = bounds.minY;
+    const w = bounds.maxX - bounds.minX;
+    const h = bounds.maxY - bounds.minY;
+    this.setFromMatrix(new Matrix());
+    this.updateLocalTransform();
+    this.updateAttr({
+      x,
+      y,
+      w,
+      h,
     });
   }
 
-  getContext(currentWorld: IPoint): IContext {
-    const lastWorld = this.lastWorld!;
+  getContext(currentInWorld: IPoint): IContext {
+    const lastInWorld = this.lastInWorld!;
     const transformerParent = this.parent!;
-    const currentLocal = transformerParent.toLocal(currentWorld);
-    const lastLocal = transformerParent.toLocal(lastWorld);
+    const currentInParent = transformerParent.toLocal(currentInWorld);
+    const lastInParent = transformerParent.toLocal(lastInWorld);
+    const lastInTransformer = this.toLocal(lastInWorld);
+    const currentInTransformer = this.toLocal(currentInWorld);
 
     const bottomRightCorner = transformerParent.toLocal(
       {
@@ -253,22 +346,33 @@ export class Transformer extends AbstractPrimitive {
       },
       this
     );
+
     return {
-      boundingBox: new Bounds(
+      transformer: this,
+      boundingBoxInParent: new Bounds(
         this.x,
         this.y,
         bottomRightCorner.x,
         bottomRightCorner.y
       ),
-      lastWorld,
-      currentLocal,
-      lastLocal,
-      currentWorld,
-      pviotWorld: this.toGlobal({
+      /**
+       * why boundingBoxInTransformer is (0,0,w,h) ?
+       * 1. in transformer's local coordinate system, its top-left corner is always (0,0)
+       * 2. all trnasformations (scale/rotate/move) are applied to the transformer itself, so in transformer's local coordinate system, the bounding box is always (0,0,w,h).
+       * so we can directly use (0,0,w,h) as boundingBoxInTransformer
+       */
+      boundingBoxInTransformer: new Bounds(0, 0, this.w, this.h),
+      lastInWorld,
+      lastInParent,
+      lastInTransformer,
+      currentInParent,
+      currentInWorld,
+      currentInTransformer,
+      pivotInWorld: this.toGlobal({
         x: this.x + this.w / 2,
         y: this.y + this.h / 2,
       }),
-      pivotLocal: transformerParent.toLocal(
+      pivotInParent: transformerParent.toLocal(
         {
           x: this.w / 2,
           y: this.h / 2,
@@ -294,10 +398,10 @@ export class Transformer extends AbstractPrimitive {
   onPointerdown = (event: FederatedPointerEvent) => {
     event.stopPropagation();
     this.dragging = true;
-    this.lastWorld = { x: event.global.x, y: event.global.y };
+    this.lastInWorld = { x: event.global.x, y: event.global.y };
   };
   onGlobalpointermove = (e: FederatedPointerEvent) => {
-    if (!this.dragging || !this.lastWorld) return;
+    if (!this.dragging || !this.lastInWorld) return;
 
     /**
      * 为什么需要转换到父节点坐标系？
@@ -313,15 +417,15 @@ export class Transformer extends AbstractPrimitive {
     console.log('handleType', this.activeHandle?.handleType);
     this.activeHandle?.onPointermove(context);
 
-    this.lastWorld = { x: e.global.x, y: e.global.y };
+    this.lastInWorld = { x: e.global.x, y: e.global.y };
   };
 
   onPointerup = () => {
     this.dragging = false;
-    this.lastWorld = null;
+    this.lastInWorld = null;
   };
 
-  applyTransform(delta: Matrix) {
+  applyTransform = (delta: Matrix) => {
     this.setFromMatrix(delta.clone().append(this.localTransform));
     this.updateLocalTransform();
     this.selectedPrimitives.forEach((primitive) => {
@@ -344,7 +448,7 @@ export class Transformer extends AbstractPrimitive {
       // BUG 为什么需要调用 updateLocalTransform？
       primitive.updateLocalTransform();
     });
-  }
+  };
 
   activateHandler = (handler: Handler) => {
     this.activeHandle = handler;
