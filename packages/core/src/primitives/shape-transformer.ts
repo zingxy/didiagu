@@ -320,35 +320,88 @@ export class Transformer extends AbstractPrimitive {
     this.visible = true;
 
     if (this.selectedPrimitives.length === 1) {
-      // 单个图形时使用OBB（定向包围盒）
+      // 单个图形时计算最小OBB（定向包围盒），去除skew影响
       const primitive = this.selectedPrimitives[0];
 
-      // 获取primitive在其父节点坐标系下的变换矩阵
-      const primitiveLocalTransform = primitive.localTransform.clone();
+      // 计算primitive四个角点在transformer父坐标系中的位置
+      const corners = [
+        { x: 0, y: 0 },
+        { x: primitive.w, y: 0 },
+        { x: primitive.w, y: primitive.h },
+        { x: 0, y: primitive.h },
+      ];
 
-      // 将primitive的局部变换转换到transformer的父节点坐标系
-      // world_tr_parent * tr = world_pri * pri_local
-      const primitiveParentToTransformerParent =
-        this.parent!.worldTransform.clone()
-          .invert()
-          .append(primitive.parent!.worldTransform);
+      const transformerParent = this.parent!;
+      const cornersInTransformerParent = corners.map((corner) => {
+        // 先转到世界坐标系
+        const worldPos = primitive.toGlobal(corner);
+        // 再转到transformer父坐标系
+        return transformerParent.toLocal(worldPos);
+      });
 
-      const transformInTransformerParent = primitiveParentToTransformerParent
-        .clone()
-        .append(primitiveLocalTransform);
-      // 从变换矩阵中提取位置、旋转和缩放
-      this.setFromMatrix(transformInTransformerParent);
+      // 计算四个角点的中心
+      const centerX =
+        cornersInTransformerParent.reduce((sum, p) => sum + p.x, 0) / 4;
+      const centerY =
+        cornersInTransformerParent.reduce((sum, p) => sum + p.y, 0) / 4;
+
+      // 使用primitive的旋转作为OBB的旋转方向
+      // 计算primitive在transformer父坐标系中的旋转角度
+      const primitiveWorldRotation = Math.atan2(
+        primitive.worldTransform.b,
+        primitive.worldTransform.a
+      );
+      const transformerParentRotation = Math.atan2(
+        transformerParent.worldTransform.b,
+        transformerParent.worldTransform.a
+      );
+      const rotation = primitiveWorldRotation - transformerParentRotation;
+
+      // 将角点转换到以中心为原点、旋转后的局部坐标系
+      const cos = Math.cos(-rotation);
+      const sin = Math.sin(-rotation);
+      const localCorners = cornersInTransformerParent.map((p) => {
+        const dx = p.x - centerX;
+        const dy = p.y - centerY;
+        return {
+          x: dx * cos - dy * sin,
+          y: dx * sin + dy * cos,
+        };
+      });
+
+      // 计算在该旋转下的AABB
+      const minX = Math.min(...localCorners.map((p) => p.x));
+      const maxX = Math.max(...localCorners.map((p) => p.x));
+      const minY = Math.min(...localCorners.map((p) => p.y));
+      const maxY = Math.max(...localCorners.map((p) => p.y));
+
+      const w = maxX - minX;
+      const h = maxY - minY;
+
+      // OBB的中心在旋转坐标系中的位置
+      const obbCenterX = (minX + maxX) / 2;
+      const obbCenterY = (minY + maxY) / 2;
+
+      // 将OBB中心转回transformer父坐标系
+      const finalCenterX =
+        centerX +
+        obbCenterX * Math.cos(rotation) -
+        obbCenterY * Math.sin(rotation);
+      const finalCenterY =
+        centerY +
+        obbCenterX * Math.sin(rotation) +
+        obbCenterY * Math.cos(rotation);
+
+      // 设置transformer（注意：position是左上角，不是中心）
+      this.position.set(finalCenterX, finalCenterY);
+      this.rotation = rotation;
+      this.scale.set(1, 1);
+      this.skew.set(0, 0);
+      this.pivot.set(w / 2, h / 2); // 设置pivot到中心
       this.updateLocalTransform();
 
-      // 设置OBB的宽高（使用原始图形的宽高）
-      this.updateAttr({
-        w: primitive.w,
-        h: primitive.h,
-      });
-      this.overlay.updateAttr({
-        w: primitive.w,
-        h: primitive.h,
-      });
+      this.updateAttr({ w, h });
+      this.overlay.updateAttr({ w, h });
     } else {
       // 多个图形时使用AABB（轴对齐包围盒）
       const bounds = this.selectedPrimitives[0].getBounds().clone();
