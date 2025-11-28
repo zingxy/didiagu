@@ -327,6 +327,7 @@ export class Transformer extends AbstractPrimitive {
       const primitiveLocalTransform = primitive.localTransform.clone();
 
       // 将primitive的局部变换转换到transformer的父节点坐标系
+      // world_tr_parent * tr = world_pri * pri_local
       const primitiveParentToTransformerParent =
         this.parent!.worldTransform.clone()
           .invert()
@@ -335,7 +336,6 @@ export class Transformer extends AbstractPrimitive {
       const transformInTransformerParent = primitiveParentToTransformerParent
         .clone()
         .append(primitiveLocalTransform);
-
       // 从变换矩阵中提取位置、旋转和缩放
       this.setFromMatrix(transformInTransformerParent);
       this.updateLocalTransform();
