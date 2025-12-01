@@ -274,12 +274,17 @@ export class Transformer extends AbstractPrimitive {
   private dragging = false;
   private lastInWorld: IPoint | null = null;
   private activeHandle: Handler | null = null;
+  private overlay = new Rect({
+    fills: 'rgba(0,0,255,0.1)',
+    strokes: '#0000ff',
+    selectable: false,
+  });
   constructor() {
     super();
     // 确保事件可以触发
     this.eventMode = 'dynamic';
     this.interactive = true;
-
+    this.addChild(this.overlay);
     // 创建控制点
     for (const handle of handles) {
       this.handleMap[handle.handleType] = new Handler(
@@ -314,61 +319,58 @@ export class Transformer extends AbstractPrimitive {
     }
     this.visible = true;
 
-    const selectedPrimitive = this.selectedPrimitives[0];
+    if (this.selectedPrimitives.length === 1) {
+      // 单个图形时使用OBB（定向包围盒）
+      const primitive = this.selectedPrimitives[0];
 
-    // 获取选中元素的本地边界框（原始尺寸，未应用变换）
-    const localBounds = selectedPrimitive.getLocalBounds();
+      // 获取primitive在其父节点坐标系下的变换矩阵
+      const primitiveLocalTransform = primitive.localTransform.clone();
 
-    // 获取选中元素在其父级坐标系中的变换矩阵
-    const primitiveLocalTransform = selectedPrimitive.localTransform.clone();
+      // 将primitive的局部变换转换到transformer的父节点坐标系
+      // world_tr_parent * tr = world_pri * pri_local
+      const primitiveParentToTransformerParent =
+        this.parent!.worldTransform.clone()
+          .invert()
+          .append(primitive.parent!.worldTransform);
 
-    // 获取选中元素父级的世界变换矩阵
-    const primitiveParentWorld =
-      selectedPrimitive.parent!.worldTransform.clone();
+      const transformInTransformerParent = primitiveParentToTransformerParent
+        .clone()
+        .append(primitiveLocalTransform);
+      // 从变换矩阵中提取位置、旋转和缩放
+      this.setFromMatrix(transformInTransformerParent);
+      this.updateLocalTransform();
 
-    // 获取 transformer 父级的世界变换矩阵的逆矩阵
-    const transformerParentInverse =
-      this.parent!.worldTransform.clone().invert();
+      // 设置OBB的宽高（使用原始图形的宽高）
+      this.updateAttr({
+        w: primitive.w,
+        h: primitive.h,
+      });
+      this.overlay.updateAttr({
+        w: primitive.w,
+        h: primitive.h,
+      });
+    } else {
+      // 多个图形时使用AABB（轴对齐包围盒）
+      const bounds = this.selectedPrimitives[0].getBounds().clone();
+      bounds.applyMatrix(this.parent!.worldTransform.clone().invert());
 
-    // 组合变换：primitive.local -> primitive.parent(world) -> transformer.parent
-    const combinedTransform = primitiveLocalTransform
-      .clone()
-      .append(primitiveParentWorld)
-      .append(transformerParentInverse);
-
-    // 变换本地边界框的四个角点到 transformer 父级坐标系
-    const corners = [
-      combinedTransform.apply({ x: localBounds.minX, y: localBounds.minY }),
-      combinedTransform.apply({ x: localBounds.maxX, y: localBounds.minY }),
-      combinedTransform.apply({ x: localBounds.maxX, y: localBounds.maxY }),
-      combinedTransform.apply({ x: localBounds.minX, y: localBounds.maxY }),
-    ];
-
-    // 从第一个角点（左上角）提取位置
-    const topLeft = corners[0];
-    const topRight = corners[1];
-
-    // 计算 transformer 的位置（左上角）
-    const x = topLeft.x;
-    const y = topLeft.y;
-
-    // 计算旋转角度（从左上角到右上角的向量）
-    const rotation = Math.atan2(topRight.y - topLeft.y, topRight.x - topLeft.x);
-
-    // 计算宽度和高度（原始尺寸）
-    const w = localBounds.maxX - localBounds.minX;
-    const h = localBounds.maxY - localBounds.minY;
-
-    // 直接设置 transformer 的变换属性
-    this.position.set(x, y);
-    this.rotation = rotation;
-    this.scale.set(1, 1);
-    this.skew.set(0, 0);
-
-    // 更新尺寸并重新渲染
-    this.w = w;
-    this.h = h;
-    this.render();
+      const x = bounds.minX;
+      const y = bounds.minY;
+      const w = bounds.maxX - bounds.minX;
+      const h = bounds.maxY - bounds.minY;
+      this.setFromMatrix(new Matrix());
+      this.updateLocalTransform();
+      this.updateAttr({
+        x,
+        y,
+        w,
+        h,
+      });
+      this.overlay.updateAttr({
+        w,
+        h,
+      });
+    }
   }
 
   getContext(currentInWorld: IPoint): IContext {
