@@ -74,7 +74,7 @@ export class SelectTool implements ITool {
   }
   /**框选逻辑 */
   onPointerDown(e: DidiaguPointerEvent): boolean | void {
-    this.clickSelect(e);
+    // this.clickSelect(e);
     const stagePos = this.editor.sceneGraph.toLocal(e.global);
     this.selectBox.updateAttr({
       x: stagePos.x,

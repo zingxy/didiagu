@@ -10,6 +10,7 @@ import { Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
 import { AbstractPrimitive, Layer, LayerConfig } from './primitives';
+import RBush from 'rbush';
 
 export interface SceneGraphEvents {
   /** 场景树节点增加或删除 */
@@ -26,6 +27,7 @@ export class SceneGraph {
   /** 场景内容容器，会应用 camera 变换，业务应用的根容器，它的自接子元素是Layer */
   private readonly stage: PIXI.Container<Layer>;
   private readonly layerManager: LayerManager;
+  private readonly spatialIndex = new RBush<AbstractPrimitive>();
   constructor(editor: Editor, world: PIXI.Container) {
     this.bus = editor.bus;
     this.world = world;
@@ -68,6 +70,9 @@ export class SceneGraph {
           children as AbstractPrimitive[]
         );
       }
+      for (const child of children) {
+        const bounds = child.getBounds()
+      }
       return layer.addChild(...children);
     } else {
       // 第一个参数是父容器
@@ -107,9 +112,6 @@ export class SceneGraph {
   };
   getDefaultLayer(): Layer {
     return this.layerManager.getLayer('default')!;
-  }
-  getSceneTreeRoot(): PIXI.Container {
-    return this.stage;
   }
   traverse(
     root: AbstractPrimitive,
