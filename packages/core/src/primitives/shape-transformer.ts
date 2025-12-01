@@ -378,26 +378,25 @@ export class Transformer extends AbstractPrimitive {
       const w = maxX - minX;
       const h = maxY - minY;
 
-      // OBB的中心在旋转坐标系中的位置
-      const obbCenterX = (minX + maxX) / 2;
-      const obbCenterY = (minY + maxY) / 2;
+      // OBB的左上角在旋转坐标系中的位置
+      const obbTopLeftX = minX;
+      const obbTopLeftY = minY;
 
-      // 将OBB中心转回transformer父坐标系
-      const finalCenterX =
+      // 将OBB左上角转回transformer父坐标系
+      const finalTopLeftX =
         centerX +
-        obbCenterX * Math.cos(rotation) -
-        obbCenterY * Math.sin(rotation);
-      const finalCenterY =
+        obbTopLeftX * Math.cos(rotation) -
+        obbTopLeftY * Math.sin(rotation);
+      const finalTopLeftY =
         centerY +
-        obbCenterX * Math.sin(rotation) +
-        obbCenterY * Math.cos(rotation);
+        obbTopLeftX * Math.sin(rotation) +
+        obbTopLeftY * Math.cos(rotation);
 
-      // 设置transformer（注意：position是左上角，不是中心）
-      this.position.set(finalCenterX, finalCenterY);
-      this.rotation = rotation;
+      // 设置transformer（position是左上角）
+
       this.scale.set(1, 1);
-      this.skew.set(0, 0);
-      this.pivot.set(w / 2, h / 2); // 设置pivot到中心
+      this.position.set(finalTopLeftX, finalTopLeftY);
+      this.rotation = rotation;
       this.updateLocalTransform();
 
       this.updateAttr({ w, h });
