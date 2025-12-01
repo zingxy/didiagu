@@ -2,6 +2,7 @@ import { FederatedPointerEvent, Matrix, Bounds } from 'pixi.js';
 import { AbstractPrimitive } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
+import { decompose } from '@didiagu/math';
 
 interface IContext {
   lastInWorld: IPoint;
@@ -320,34 +321,56 @@ export class Transformer extends AbstractPrimitive {
     this.visible = true;
 
     if (this.selectedPrimitives.length === 1) {
-      // 单个图形时使用OBB（定向包围盒）
+      // 计算primitive四个角点在transformer父坐标系中的位置
       const primitive = this.selectedPrimitives[0];
+      const corners = [
+        { x: 0, y: 0 },
+        { x: primitive.w, y: 0 },
+        { x: primitive.w, y: primitive.h },
+        { x: 0, y: primitive.h },
+      ];
 
-      // 获取primitive在其父节点坐标系下的变换矩阵
-      const primitiveLocalTransform = primitive.localTransform.clone();
+      // 转换到transformer父坐标系
+      const cornersInTransformerParent = corners.map((corner) => {
+        return this.parent!.toLocal(primitive.toGlobal(corner));
+      });
 
-      // 将primitive的局部变换转换到transformer的父节点坐标系
-      // world_tr_parent * tr = world_pri * pri_local
-      const primitiveParentToTransformerParent =
-        this.parent!.worldTransform.clone()
-          .invert()
-          .append(primitive.parent!.worldTransform);
+      const matrixInTransformerParent = this.parent!.worldTransform.clone()
+        .invert()
+        .append(primitive.worldTransform);
 
-      const transformInTransformerParent = primitiveParentToTransformerParent
-        .clone()
-        .append(primitiveLocalTransform);
-      // 从变换矩阵中提取位置、旋转和缩放
-      this.setFromMatrix(transformInTransformerParent);
+      // 计算旋转角度(绝对旋转)
+      const rotation = decompose(matrixInTransformerParent).rotation;
+
+      // 消除旋转的影响，计算AABB
+      // TODO 为什么直接绕 transformer 父坐标系的原点旋转就可以了？ 因该绕图形中心旋转才对啊
+      const r = new Matrix().rotate(-rotation);
+      const rotatedCorners = cornersInTransformerParent.map((corner) => {
+        return r.apply(corner);
+      });
+      const minX = Math.min(...rotatedCorners.map((corner) => corner.x));
+      const maxX = Math.max(...rotatedCorners.map((corner) => corner.x));
+      const minY = Math.min(...rotatedCorners.map((corner) => corner.y));
+      const maxY = Math.max(...rotatedCorners.map((corner) => corner.y));
+      // 计算出obb的宽高
+      const width = maxX - minX;
+      const height = maxY - minY;
+      r.invert();
+      // 计算出obb的左上角在transformer父坐标系中的位置
+      // TODO 为什么直接计算出来的就是obb的左上角？
+      const topLeft = r.apply({ x: minX, y: minY });
+      this.setFromMatrix(new Matrix());
       this.updateLocalTransform();
-
-      // 设置OBB的宽高（使用原始图形的宽高）
       this.updateAttr({
-        w: primitive.w,
-        h: primitive.h,
+        x: topLeft.x,
+        y: topLeft.y,
+        w: width,
+        h: height,
+        rotation: rotation,
       });
       this.overlay.updateAttr({
-        w: primitive.w,
-        h: primitive.h,
+        w: width,
+        h: height,
       });
     } else {
       // 多个图形时使用AABB（轴对齐包围盒）
