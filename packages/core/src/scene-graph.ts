@@ -21,20 +21,26 @@ export class SceneGraph {
   private bus: Editor['bus'];
   /**
    * 记录的是app.stage
-   * 实际上不会对app.stage进行任何变换，因此它和pixi的world是一致。
+   * 实际上不会对app.stage进行任何变换
    */
-  private readonly world: PIXI.Container;
+  private readonly root: PIXI.Container;
   /** 场景内容容器，会应用 camera 变换，业务应用的根容器，它的自接子元素是Layer */
-  private readonly stage: PIXI.Container<Layer>;
+  private readonly scene: PIXI.Container<Layer>;
   private readonly layerManager: LayerManager;
-  private readonly spatialIndex = new RBush<AbstractPrimitive>();
-  constructor(editor: Editor, world: PIXI.Container) {
+  private readonly spatialIndex = new RBush<PIXI.Bounds>();
+  private editor: Editor;
+  /**
+   * p_camera  = viewMatrix * p_world
+   */
+  private viewMatrix: Matrix = new Matrix();
+  constructor(editor: Editor, root: PIXI.Container) {
+    this.editor = editor;
     this.bus = editor.bus;
-    this.world = world;
+    this.root = root;
     // 创建独立的场景容器，用于应用 camera 变换
-    this.stage = new PIXI.Container();
-    this.world.addChild(this.stage);
-    this.layerManager = new LayerManager(editor, this.stage);
+    this.scene = new PIXI.Container();
+    this.root.addChild(this.scene);
+    this.layerManager = new LayerManager(editor, this.scene);
     this.bindEvents();
   }
   bindEvents() {
@@ -42,8 +48,66 @@ export class SceneGraph {
   }
   onCameraChanged(matrix: Matrix) {
     // 应用变换到场景容器
-    this.stage.setFromMatrix(matrix);
+    this.scene.setFromMatrix(matrix);
+    this.viewMatrix = matrix;
+    this.getPrimitivesInViewport();
   }
+  /**
+   * @description 获取图元在场景坐标系下的边界框
+   * @param primitive
+   * @returns
+   */
+  getBoundsInScene(primitive: AbstractPrimitive): PIXI.Bounds {
+    return this.pixiWorldBoundsToSceneBounds(primitive.getBounds());
+  }
+
+  pixiWorldBoundsToSceneBounds(worldbounds: PIXI.Bounds): PIXI.Bounds {
+    const sceneBounds = worldbounds.clone();
+    sceneBounds.applyMatrix(this.viewMatrix.clone().invert());
+    return sceneBounds;
+  }
+
+  /**
+   * @description 获取视口的边界框
+   * @returns
+   */
+  getViewportBoundsInScene(): PIXI.Bounds {
+    const screen = this.editor.app.screen;
+    const bounds = new PIXI.Bounds(
+      screen.left,
+      screen.top,
+      screen.right,
+      screen.bottom
+    );
+    return this.pixiWorldBoundsToSceneBounds(bounds);
+  }
+  /**
+   * @description 获取在屏幕范围内的所有图元
+   * @param bounds
+   */
+  getPrimitivesInViewport() {
+    const viewportBounds = this.getViewportBoundsInScene();
+    const primitives = this.spatialIndex.search(viewportBounds);
+    console.log('[debug] primitives in viewport:', primitives);
+    console.log('[debug] primitives in rbush:', this.spatialIndex.all());
+  }
+
+  insertToSpatialIndex(primitives: AbstractPrimitive[]) {
+    this.removeFromSpatialIndex(primitives);
+    for (const primitive of primitives) {
+      const bounds = this.getBoundsInScene(primitive);
+      bounds.uuid = primitive.uuid;
+      this.spatialIndex.insert(bounds);
+    }
+  }
+  removeFromSpatialIndex(primitives: AbstractPrimitive[]) {
+    for (const primitive of primitives) {
+      const bounds = this.getBoundsInScene(primitive);
+      bounds.uuid = primitive.uuid;
+      this.spatialIndex.remove(bounds, (a, b) => a.uuid === b.uuid);
+    }
+  }
+
   /**
    * 所有节点都应该添加到对应的图层中，或者图层的后代中
    */
@@ -69,9 +133,14 @@ export class SceneGraph {
           'scene.descendantChanged',
           children as AbstractPrimitive[]
         );
-      }
-      for (const child of children) {
-        const bounds = child.getBounds()
+        children.forEach((child) => {
+          child.on('attr.changed', () => {
+            console.log(
+              '[debug] primitive attr changed, updating spatial index'
+            );
+            this.insertToSpatialIndex([child as AbstractPrimitive]);
+          });
+        });
       }
       return layer.addChild(...children);
     } else {
@@ -87,6 +156,14 @@ export class SceneGraph {
           'scene.descendantChanged',
           children as AbstractPrimitive[]
         );
+        children.forEach((child) => {
+          child.on('attr.changed', () => {
+            console.log(
+              '[debug] primitive attr changed, updating spatial index'
+            );
+            this.insertToSpatialIndex([child as AbstractPrimitive]);
+          });
+        });
       }
       return parent.addChild(...children);
     }
@@ -104,11 +181,16 @@ export class SceneGraph {
     this.bus.emit('scene.descendantChanged', removedChildren);
   };
   removeChildren = (...args: Parameters<PIXI.Container['removeChildren']>) => {
-    this.bus.emit('scene.descendantChanged', this.stage.children);
-    return this.stage.removeChildren(...args);
+    this.bus.emit('scene.descendantChanged', this.scene.children);
+    return this.scene.removeChildren(...args);
   };
+  /**
+   * @description 转换到场景坐标系
+   * @param args
+   * @returns
+   */
   toLocal: PIXI.Container['toLocal'] = (...args) => {
-    return this.stage.toLocal(...args);
+    return this.scene.toLocal(...args);
   };
   getDefaultLayer(): Layer {
     return this.layerManager.getLayer('default')!;

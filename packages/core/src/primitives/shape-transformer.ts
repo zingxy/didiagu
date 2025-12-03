@@ -511,6 +511,7 @@ export class Transformer extends AbstractPrimitive {
       primitive.setFromMatrix(localDelta.append(primitive.localTransform));
       // BUG 为什么需要调用 updateLocalTransform？
       primitive.updateLocalTransform();
+      primitive.updateAttr({}); // 触发重绘
     });
   };
 
