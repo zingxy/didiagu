@@ -147,7 +147,7 @@ export class SceneGraph {
     }
   }
 
-  removeChild = (...children: AbstractPrimitive[]) => {
+  removeChildren = (...children: AbstractPrimitive[]) => {
     const removedChildren = [];
     for (const child of children) {
       const layer = this.layerManager.findParentLayer(child);
@@ -157,10 +157,6 @@ export class SceneGraph {
       child.parent?.removeChild(child);
     }
     this.bus.emit('scene.descendantChanged', removedChildren);
-  };
-  removeChildren = (...args: Parameters<PIXI.Container['removeChildren']>) => {
-    this.bus.emit('scene.descendantChanged', this.scene.children);
-    return this.scene.removeChildren(...args);
   };
   /**
    * @description 转换到场景坐标系
