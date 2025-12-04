@@ -69,6 +69,10 @@ export class Editor extends EventBus {
     return this.toolManager.getCurrentToolId();
   };
 
+  getScreen(){
+    return this.app.screen;
+  }
+
   destroy = () => {
     this.app.destroy();
   };

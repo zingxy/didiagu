@@ -10,7 +10,7 @@ import { Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
 import { AbstractPrimitive, Layer, LayerConfig } from './primitives';
-import RBush from 'rbush';
+import { SpatialIndexManager } from './spatial-index-manager';
 
 export interface SceneGraphEvents {
   /** 场景树节点增加或删除 */
@@ -27,7 +27,7 @@ export class SceneGraph {
   /** 场景内容容器，会应用 camera 变换，业务应用的根容器，它的自接子元素是Layer */
   private readonly scene: PIXI.Container<Layer>;
   private readonly layerManager: LayerManager;
-  private readonly spatialIndex = new RBush<PIXI.Bounds>();
+  private readonly spatialIndex = new SpatialIndexManager(this);
   private editor: Editor;
   /**
    * p_camera  = viewMatrix * p_world
@@ -60,11 +60,10 @@ export class SceneGraph {
   getBoundsInScene(primitive: AbstractPrimitive): PIXI.Bounds {
     return this.pixiWorldBoundsToSceneBounds(primitive.getBounds());
   }
-  
 
   /**
    * @param worldbounds pixi.getBounds() 获取到的bounds
-   * @returns 转换到 scene 坐标系下的bounds 
+   * @returns 转换到 scene 坐标系下的bounds
    */
   pixiWorldBoundsToSceneBounds(worldbounds: PIXI.Bounds): PIXI.Bounds {
     const sceneBounds = worldbounds.clone();
@@ -77,7 +76,7 @@ export class SceneGraph {
    * @returns bounds
    */
   getViewportBoundsInScene(): PIXI.Bounds {
-    const screen = this.editor.app.screen;
+    const screen = this.editor.getScreen();
     const bounds = new PIXI.Bounds(
       screen.left,
       screen.top,
@@ -95,23 +94,6 @@ export class SceneGraph {
     const primitives = this.spatialIndex.search(viewportBounds);
     console.log('[debug] primitives in viewport:', primitives.length);
     console.log('[debug] primitives in rbush:', this.spatialIndex.all().length);
-  }
-
-  
-  insertToSpatialIndex(primitives: AbstractPrimitive[]) {
-    this.removeFromSpatialIndex(primitives);
-    for (const primitive of primitives) {
-      const bounds = this.getBoundsInScene(primitive);
-      bounds.uuid = primitive.uuid;
-      this.spatialIndex.insert(bounds);
-    }
-  }
-  removeFromSpatialIndex(primitives: AbstractPrimitive[]) {
-    for (const primitive of primitives) {
-      const bounds = this.getBoundsInScene(primitive);
-      bounds.uuid = primitive.uuid;
-      this.spatialIndex.remove(bounds, (a, b) => a.uuid === b.uuid);
-    }
   }
 
   /**
@@ -140,12 +122,7 @@ export class SceneGraph {
           children as AbstractPrimitive[]
         );
         children.forEach((child) => {
-          child.on('attr.changed', () => {
-            console.log(
-              '[debug] primitive attr changed, updating spatial index'
-            );
-            this.insertToSpatialIndex([child as AbstractPrimitive]);
-          });
+          this.spatialIndex.track(child as AbstractPrimitive);
         });
       }
       return layer.addChild(...children);
@@ -163,12 +140,7 @@ export class SceneGraph {
           children as AbstractPrimitive[]
         );
         children.forEach((child) => {
-          child.on('attr.changed', () => {
-            console.log(
-              '[debug] primitive attr changed, updating spatial index'
-            );
-            this.insertToSpatialIndex([child as AbstractPrimitive]);
-          });
+          this.spatialIndex.track(child as AbstractPrimitive);
         });
       }
       return parent.addChild(...children);
