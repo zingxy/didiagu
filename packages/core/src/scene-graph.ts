@@ -20,26 +20,30 @@ export interface SceneGraphEvents {
 export class SceneGraph {
   private bus: Editor['bus'];
   /**
-   * 记录的是app.stage
-   * 实际上不会对app.stage进行任何变换
+   * @description 这里是cameraSpace/Viewport
    */
-  private readonly root: PIXI.Container;
-  /** 场景内容容器，会应用 camera 变换，业务应用的根容器，它的自接子元素是Layer */
-  private readonly scene: PIXI.Container<Layer>;
-  private readonly layerManager: LayerManager;
-  private readonly spatialIndex = new SpatialIndexManager(this);
-  private editor: Editor;
+  private readonly cameraSpace: PIXI.Container;
   /**
    * p_camera  = viewMatrix * p_world
    */
-  private viewMatrix: Matrix = new Matrix();
+  private viewMatrix: Matrix = new Matrix(); // 感觉可以废弃，直接用
+  /**
+   * @description **逻辑**世界空间，区别于pixijs的world
+   */
+  private readonly scene: PIXI.Container<Layer>;
+  private readonly layerManager: LayerManager;
+  /**
+   * @description 空间索引
+   */
+  private readonly spatialIndex = new SpatialIndexManager(this);
+  private editor: Editor;
   constructor(editor: Editor, root: PIXI.Container) {
     this.editor = editor;
     this.bus = editor.bus;
-    this.root = root;
+    this.cameraSpace = root;
     // 创建独立的场景容器，用于应用 camera 变换
     this.scene = new PIXI.Container();
-    this.root.addChild(this.scene);
+    this.cameraSpace.addChild(this.scene);
     this.layerManager = new LayerManager(editor, this.scene);
     this.bindEvents();
   }
@@ -47,7 +51,7 @@ export class SceneGraph {
     this.bus.on('camera.changed', this.onCameraChanged.bind(this));
   }
   onCameraChanged(matrix: Matrix) {
-    // 应用变换到场景容器
+    // 应用变换到场景容器, **注意这里是直接设置scene的矩阵**
     this.scene.setFromMatrix(matrix);
     this.viewMatrix = matrix;
     this.getPrimitivesInViewport();
