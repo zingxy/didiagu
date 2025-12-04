@@ -22,7 +22,7 @@ export class SelectionManager {
   public selected: Set<AbstractPrimitive>;
   private sceneGraph: Editor['sceneGraph'];
   private outlineGraphics = new Graphics();
-  private transformer = new Transformer();
+  private transformer: Transformer;
   private dirty = false;
 
   constructor(editor: Editor) {
@@ -30,6 +30,7 @@ export class SelectionManager {
     this.bus = editor.bus;
     this.sceneGraph = editor.sceneGraph;
     this.selected = new Set<AbstractPrimitive>();
+    this.transformer = new Transformer(editor)
     this.sceneGraph.addChild('helper', this.transformer);
   }
   select(primitives: AbstractPrimitive[]) {

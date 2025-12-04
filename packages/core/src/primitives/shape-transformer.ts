@@ -3,6 +3,7 @@ import { AbstractPrimitive } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
 import { decompose } from '@didiagu/math';
+import { Editor } from '..';
 
 interface IContext {
   lastInWorld: IPoint;
@@ -280,11 +281,13 @@ export class Transformer extends AbstractPrimitive {
     strokes: '#0000ff',
     selectable: false,
   });
-  constructor() {
+  private editor: Editor;
+  constructor(editor: Editor) {
     super();
     // 确保事件可以触发
     this.eventMode = 'dynamic';
     this.interactive = true;
+    this.editor = editor;
     this.addChild(this.overlay);
     // 创建控制点
     for (const handle of handles) {
@@ -374,13 +377,24 @@ export class Transformer extends AbstractPrimitive {
       });
     } else {
       // 多个图形时使用AABB（轴对齐包围盒）
-      const bounds = this.selectedPrimitives[0].getBounds().clone();
-      bounds.applyMatrix(this.parent!.worldTransform.clone().invert());
+      const primitives = this.selectedPrimitives;
+      let minX = Infinity;
+      let minY = Infinity;
+      let maxX = -Infinity;
+      let maxY = -Infinity;
+      for (const primitive of primitives) {
+        const bounds = this.editor.sceneGraph.getSceneBounds(primitive);
+        minX = Math.min(minX, bounds.minX);
+        minY = Math.min(minY, bounds.minY);
+        maxX = Math.max(maxX, bounds.maxX);
+        maxY = Math.max(maxY, bounds.maxY);
+      }
 
-      const x = bounds.minX;
-      const y = bounds.minY;
-      const w = bounds.maxX - bounds.minX;
-      const h = bounds.maxY - bounds.minY;
+      const x = minX;
+      const y = minY;
+      const w = maxX - minX;
+      const h = maxY - minY;
+      console.log('multi select transformer', { x, y, w, h });
       this.setFromMatrix(new Matrix());
       this.updateLocalTransform();
       this.updateAttr({

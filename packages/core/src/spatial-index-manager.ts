@@ -31,7 +31,7 @@ export class SpatialIndexManager {
     this.sceneGraph = sceneGraph;
   }
   private index(primitive: AbstractPrimitive) {
-    const bounds = this.sceneGraph.getBoundsInScene(primitive);
+    const bounds = this.sceneGraph.getSceneBounds(primitive);
     const indexedBounds: IndexedBounds = Object.assign(bounds, {
       uuid: primitive.uuid,
       ref: primitive,

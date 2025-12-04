@@ -65,7 +65,7 @@ export class SceneGraph {
    * @param primitive
    * @returns
    */
-  getBoundsInScene(primitive: AbstractPrimitive): PIXI.Bounds {
+  getSceneBounds(primitive: AbstractPrimitive): PIXI.Bounds {
     return this.pixiWorldBoundsToSceneBounds(primitive.getBounds());
   }
 

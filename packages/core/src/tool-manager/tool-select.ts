@@ -77,7 +77,7 @@ export class SelectTool implements ITool {
     });
 
     const primitives = this.editor.sceneGraph.getPrimiveByBounds(
-      this.editor.sceneGraph.getBoundsInScene(this.selectBox)
+      this.editor.sceneGraph.getSceneBounds(this.selectBox)
     );
     this.editor.selectionManager.deselectAll();
     this.editor.selectionManager.select(primitives);
@@ -86,7 +86,7 @@ export class SelectTool implements ITool {
   }
   onPointerUp(): boolean | void {
     const primitives = this.editor.sceneGraph.getPrimiveByBounds(
-      this.editor.sceneGraph.getBoundsInScene(this.selectBox)
+      this.editor.sceneGraph.getSceneBounds(this.selectBox)
     );
     this.editor.selectionManager.deselectAll();
     this.editor.selectionManager.select(primitives);
