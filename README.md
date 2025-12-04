@@ -2,35 +2,26 @@
 
 图形编辑器
 
-## TODO
-
-class Camera {}
-
-class SceneGraph {}
-
-class History {}
-
-class Tools {}
-
-class Layers {}
-
-class Selection {}
-
-class Transformer {}
-
-class Keyboard {}
-
-class Shortcuts {}
-
-class Grid {}
-
-class Clipboard {}
-
-class Exporter {}
-
-class Importer {}
-
-class Collaboration {}
+## Core modules
+- [x] SceneGraph
+- [x] Camera
+- [x] ToolManager
+    - [X] shape tool
+    - [ ] select tool
+    - [ ] image tool
+    - [ ] graph tool
+    - [ ] Curve tool 
+    - [ ] Text tool
+- [x] Layers
+- [x] Selection
+- [x] Transformer
+- [ ] History
+- [x] ActionManager(Shortcuts) 
+- [ ] Ruler
+- [ ] Grid
+- [ ] Alignment/Snap
+- [ ] Clipboard
+- [ ] Collaboration
 
 ## 模块间通信
 
