@@ -53,14 +53,19 @@ export class SceneGraph {
     this.getPrimitivesInViewport();
   }
   /**
-   * @description 获取图元在场景坐标系下的边界框
+   * @description 获取图元在scene坐标系下的bounds
    * @param primitive
    * @returns
    */
   getBoundsInScene(primitive: AbstractPrimitive): PIXI.Bounds {
     return this.pixiWorldBoundsToSceneBounds(primitive.getBounds());
   }
+  
 
+  /**
+   * @param worldbounds pixi.getBounds() 获取到的bounds
+   * @returns 转换到 scene 坐标系下的bounds 
+   */
   pixiWorldBoundsToSceneBounds(worldbounds: PIXI.Bounds): PIXI.Bounds {
     const sceneBounds = worldbounds.clone();
     sceneBounds.applyMatrix(this.viewMatrix.clone().invert());
@@ -68,8 +73,8 @@ export class SceneGraph {
   }
 
   /**
-   * @description 获取视口的边界框
-   * @returns
+   * @description 获取视口在scene坐标系下的bounds
+   * @returns bounds
    */
   getViewportBoundsInScene(): PIXI.Bounds {
     const screen = this.editor.app.screen;
@@ -83,15 +88,16 @@ export class SceneGraph {
   }
   /**
    * @description 获取在屏幕范围内的所有图元
-   * @param bounds
+   * @returns 图元列表
    */
   getPrimitivesInViewport() {
     const viewportBounds = this.getViewportBoundsInScene();
     const primitives = this.spatialIndex.search(viewportBounds);
-    console.log('[debug] primitives in viewport:', primitives);
-    console.log('[debug] primitives in rbush:', this.spatialIndex.all());
+    console.log('[debug] primitives in viewport:', primitives.length);
+    console.log('[debug] primitives in rbush:', this.spatialIndex.all().length);
   }
 
+  
   insertToSpatialIndex(primitives: AbstractPrimitive[]) {
     this.removeFromSpatialIndex(primitives);
     for (const primitive of primitives) {
