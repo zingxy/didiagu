@@ -107,7 +107,6 @@ export class SelectionManager {
     this.sceneGraph.addChild('helper', this.outlineGraphics);
   }
   updateTransformer() {
-    console.log('updateTransformer', this.selected.size);
     this.transformer.update(Array.from(this.selected));
   }
 }

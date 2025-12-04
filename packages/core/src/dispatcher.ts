@@ -121,7 +121,6 @@ export class Dispatcher {
 
     this.canvas.addEventListener('contextmenu', (e: MouseEvent) => {
       e.preventDefault();
-      console.log('Dispatcher contextmenu event prevented');
     });
   }
 
@@ -129,7 +128,6 @@ export class Dispatcher {
    * 分发指针按下事件
    */
   dispatchPointerDown(e: DidiaguPointerEvent): boolean {
-    console.log('Dispatcher dispatchPointerDown');
     for (const handler of this.handlers) {
       if (handler.onPointerDown?.(e)) {
         return true; // 事件被处理，停止传播

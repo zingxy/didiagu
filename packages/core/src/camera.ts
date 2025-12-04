@@ -39,7 +39,6 @@ export class Camera implements IEventHandler {
   }
 
   onPointerDown = (e: PIXI.FederatedPointerEvent): boolean => {
-    console.log('Camera onPointerDown', e.button, keyPressed.space);
     // 中键拖动或者空格键+左键拖动
     if (e.button === 1 || (e.button === 0 && keyPressed.space)) {
       this.isPressing = true;

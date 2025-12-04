@@ -41,11 +41,9 @@ export default function SceneTree() {
   const editor = useAppState((state) => state.editor);
   const selection = useAppState((state) => state.selection);
   const selectedKeys = selection.map((item) => item.uuid);
-  console.log('SceneTree render', selectedKeys);
   useEffect(() => {
     if (!editor) return;
     const onDescendantChanged = (children: AbstractPrimitive[]) => {
-      console.log('descendant changed', children);
       forceUpdate();
     };
     editor.on('scene.descendantChanged', onDescendantChanged);
@@ -74,7 +72,6 @@ export default function SceneTree() {
     title: 'Scene',
     children: data ? data.children : [],
   };
-  console.log('tree data', root);
 
   return (
     <Tree

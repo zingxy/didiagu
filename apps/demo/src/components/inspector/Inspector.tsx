@@ -47,13 +47,8 @@ const Inspector: React.FC = () => {
         form={form}
         variant="filled"
         colon={false}
-        // layout="inline"
         labelAlign="right"
-        // onFieldsChange={(fields) => {
-        // console.log('filed', fields);
-        // }}
         onBlur={() => {
-          console.log('blur');
           const values = form.getFieldsValue();
           Object.entries(values).forEach(([key, value]) => {
             firstSelected.setParameter(key as any, value);

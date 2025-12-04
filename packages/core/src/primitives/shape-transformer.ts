@@ -394,7 +394,6 @@ export class Transformer extends AbstractPrimitive {
       const y = minY;
       const w = maxX - minX;
       const h = maxY - minY;
-      console.log('multi select transformer', { x, y, w, h });
       this.setFromMatrix(new Matrix());
       this.updateLocalTransform();
       this.updateAttr({
@@ -492,7 +491,6 @@ export class Transformer extends AbstractPrimitive {
       x: e.global.x,
       y: e.global.y,
     });
-    console.log('handleType', this.activeHandle?.handleType);
     this.activeHandle?.onPointermove(context);
 
     this.lastInWorld = { x: e.global.x, y: e.global.y };

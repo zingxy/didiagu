@@ -92,7 +92,6 @@ export class ActionsManager {
           `Action with name "${action.name}" is already registered.`
         );
       }
-      console.log('Registering action:', action.name);
       this.actions.set(action.name, action);
     });
   }

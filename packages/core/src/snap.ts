@@ -19,7 +19,6 @@ export class RefEngine {
     const refLineSnap = new RefLineSnap();
     const candidates: RefItem[] = [];
     candidates.push(...refLineSnap.compute(context));
-    console.log('生成的吸附候选点', candidates);
     return candidates;
   }
 

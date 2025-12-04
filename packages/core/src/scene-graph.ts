@@ -58,7 +58,6 @@ export class SceneGraph {
     // 应用变换到场景容器, **注意这里是直接设置scene的矩阵**
     this.scene.setFromMatrix(matrix);
     this.viewMatrix = matrix;
-    this.getPrimitivesInViewport();
   }
   /**
    * @description 获取图元在scene坐标系下的bounds
@@ -101,7 +100,6 @@ export class SceneGraph {
     const viewportBounds = this.getViewportBoundsInScene();
     const bounds = this.spatialIndex.search(viewportBounds);
     const primitives = bounds.map((b) => b.ref);
-    console.log('[debug] primitives in viewport:', primitives);
     return primitives;
   }
 

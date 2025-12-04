@@ -37,11 +37,9 @@ export class SelectTool implements ITool {
   }
 
   onActivate() {
-    console.log(`${this.desc} tool activated`);
   }
 
   onDeactivate() {
-    console.log(`${this.desc} tool deactivated`);
   }
 
   /**框选逻辑 */

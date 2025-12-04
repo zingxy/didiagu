@@ -20,11 +20,9 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.editor = editor;
   }
   onActivate() {
-    console.log(`${this.desc} tool activated`);
   }
 
   onDeactivate() {
-    console.log(`${this.desc} tool deactivated`);
   }
 
   onPointerDown(e: FederatedPointerEvent) {
