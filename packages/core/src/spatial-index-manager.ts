@@ -15,6 +15,7 @@ import { SceneGraph } from './scene-graph';
  */
 interface IndexedBounds extends PIXI.Bounds {
   uuid: string;
+  ref: AbstractPrimitive;
 }
 
 /**
@@ -33,6 +34,7 @@ export class SpatialIndexManager {
     const bounds = this.sceneGraph.getBoundsInScene(primitive);
     const indexedBounds: IndexedBounds = Object.assign(bounds, {
       uuid: primitive.uuid,
+      ref: primitive,
     });
     this.spatialIndex.insert(indexedBounds);
     this.primitiveToBounds.set(primitive, indexedBounds);

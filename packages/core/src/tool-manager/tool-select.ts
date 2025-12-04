@@ -21,7 +21,7 @@ export class SelectTool implements ITool {
   readonly desc = 'Select Tool';
   private editor: Editor;
   private selectBox: Rect;
-  private dragging: boolean = false;
+  private pressed: boolean = false;
   constructor(editor: Editor) {
     this.editor = editor;
     this.selectBox = new Rect({
@@ -43,38 +43,9 @@ export class SelectTool implements ITool {
   onDeactivate() {
     console.log(`${this.desc} tool deactivated`);
   }
-  /**点选逻辑 */
-  clickSelect(e: DidiaguPointerEvent) {
-    if (!(e.target instanceof AbstractPrimitive)) {
-      console.log(
-        'select tool clicked on non-primitive target, deselecting all'
-      );
-      this.editor.selectionManager.deselectAll();
-      return;
-    }
 
-    const primitive = e.target as AbstractPrimitive;
-    if (!primitive.selectable) {
-      console.log(
-        'select tool clicked on non-selectionable primitive, do nothing'
-      );
-      return;
-    }
-    const selectionManager = this.editor.selectionManager;
-    const multiSelect = e.shiftKey;
-    if (!multiSelect) {
-      selectionManager.deselectAll();
-    } else {
-      if (selectionManager.selected.has(primitive)) {
-        selectionManager.deselect([primitive]);
-        return;
-      }
-    }
-    selectionManager.select([primitive]);
-  }
   /**框选逻辑 */
   onPointerDown(e: DidiaguPointerEvent): boolean | void {
-    // this.clickSelect(e);
     const stagePos = this.editor.sceneGraph.toLocal(e.global);
     this.selectBox.updateAttr({
       x: stagePos.x,
@@ -82,11 +53,11 @@ export class SelectTool implements ITool {
       w: 0,
       h: 0,
     });
-    this.dragging = true;
+    this.pressed = true;
     return true;
   }
   onPointerMove(e: DidiaguPointerEvent): boolean | void {
-    if (!this.dragging) {
+    if (!this.pressed) {
       return;
     }
     const startX = this.selectBox.x;
@@ -104,16 +75,22 @@ export class SelectTool implements ITool {
       w: rectW,
       h: rectH,
     });
-    this.editor.selectionManager.selectBox({
-      x: rectX,
-      y: rectY,
-      w: rectW,
-      h: rectH,
-    });
+
+    const primitives = this.editor.sceneGraph.getPrimiveByBounds(
+      this.editor.sceneGraph.getBoundsInScene(this.selectBox)
+    );
+    this.editor.selectionManager.deselectAll();
+    this.editor.selectionManager.select(primitives);
+
     return true;
   }
   onPointerUp(): boolean | void {
-    this.dragging = false;
+    const primitives = this.editor.sceneGraph.getPrimiveByBounds(
+      this.editor.sceneGraph.getBoundsInScene(this.selectBox)
+    );
+    this.editor.selectionManager.deselectAll();
+    this.editor.selectionManager.select(primitives);
+    this.pressed = false;
     this.selectBox.updateAttr({ w: 0, h: 0 });
   }
 }

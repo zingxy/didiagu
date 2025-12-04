@@ -70,10 +70,6 @@ export class SelectionManager {
     this.select([primitive]);
   }
 
-  selectBox({ x, y, w, h }: { x: number; y: number; w: number; h: number }) {
-    // TODO 框选逻辑
-  }
-
   /**
    *
    * @description 选区变化事件触发, 使用微任务合并多次变化,避免频繁触发selection.changed事件.

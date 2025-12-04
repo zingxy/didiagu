@@ -2,7 +2,7 @@ import { FederatedPointerEvent } from 'pixi.js';
 import type { ITool, IPoint } from './types';
 import { AbstractPrimitive } from '../primitives';
 import { Editor } from '../editor';
-const DRAG_THRESHOLD = 2; // 像素阈值，小于此值视为点击
+import { DRAG_THRESHOLD } from '../contants';
 
 abstract class AbstractDrawShapeTool implements ITool {
   abstract readonly id: string;

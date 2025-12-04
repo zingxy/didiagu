@@ -36,6 +36,10 @@ export class SceneGraph {
    * @description 空间索引
    */
   private readonly spatialIndex = new SpatialIndexManager(this);
+  /**
+   * @description 图元映射表，通过id快速定位图元
+   */
+  private readonly primitiveMap: Map<string, AbstractPrimitive> = new Map();
   private editor: Editor;
   constructor(editor: Editor, root: PIXI.Container) {
     this.editor = editor;
@@ -93,11 +97,20 @@ export class SceneGraph {
    * @description 获取在屏幕范围内的所有图元
    * @returns 图元列表
    */
-  getPrimitivesInViewport() {
+  getPrimitivesInViewport(): AbstractPrimitive[] {
     const viewportBounds = this.getViewportBoundsInScene();
-    const primitives = this.spatialIndex.search(viewportBounds);
-    console.log('[debug] primitives in viewport:', primitives.length);
-    console.log('[debug] primitives in rbush:', this.spatialIndex.all().length);
+    const bounds = this.spatialIndex.search(viewportBounds);
+    const primitives = bounds.map((b) => b.ref);
+    console.log('[debug] primitives in viewport:', primitives);
+    return primitives;
+  }
+
+  getPrimiveByBounds(bounds: PIXI.Bounds): AbstractPrimitive[] {
+    const indexedBounds = this.spatialIndex.search(bounds);
+    return indexedBounds.map((b) => b.ref);
+  }
+  getPrimiveById(id: string): AbstractPrimitive | undefined {
+    return this.primitiveMap.get(id);
   }
 
   /**
@@ -129,6 +142,10 @@ export class SceneGraph {
           this.spatialIndex.track(child as AbstractPrimitive);
         });
       }
+      children.forEach((child) => {
+        if (!(child instanceof AbstractPrimitive)) return;
+        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
+      });
       return layer.addChild(...children);
     } else {
       // 第一个参数是父容器
@@ -147,6 +164,10 @@ export class SceneGraph {
           this.spatialIndex.track(child as AbstractPrimitive);
         });
       }
+      children.forEach((child) => {
+        if (!(child instanceof AbstractPrimitive)) return;
+        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
+      });
       return parent.addChild(...children);
     }
   }
@@ -158,6 +179,7 @@ export class SceneGraph {
       if (layer && layer.trackable) {
         removedChildren.push(child);
       }
+      this.primitiveMap.delete(child.uuid);
       child.parent?.removeChild(child);
     }
     this.bus.emit('scene.descendantChanged', removedChildren);
