@@ -18,7 +18,9 @@ export class DrawFrameTool extends AbstractDrawShapeTool {
   readonly desc = 'Draw Frame';
 
   override createShape() {
-    return new Frame({});
+    return new Frame({
+      fills: [{ type: 'SOLID', color: '#ffffff' }],
+    });
   }
 
   override finalizeShape(): void {

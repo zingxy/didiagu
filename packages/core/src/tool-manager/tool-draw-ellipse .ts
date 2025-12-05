@@ -18,7 +18,9 @@ export class DrawEllipseTool extends AbstractDrawShapeTool {
   readonly desc = 'Draw Ellipse';
 
   override createShape() {
-    return new Ellipse({});
+    return new Ellipse({
+      strokes: [{ type: 'SOLID', color: '#000000' }],
+    });
   }
 
   override finalizeShape(): void {

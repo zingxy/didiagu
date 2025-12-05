@@ -240,7 +240,7 @@ export class Handler extends Rect {
     deactivate: () => void
   ) {
     super({
-      fills: '#ff0000',
+      fills: [{ type: 'SOLID', color: '#ff0000' }],
       w: cpSize,
       h: cpSize,
       selectable: false,
@@ -277,8 +277,8 @@ export class Transformer extends AbstractPrimitive {
   private lastInWorld: IPoint | null = null;
   private activeHandle: Handler | null = null;
   private overlay = new Rect({
-    fills: 'rgba(0,0,255,0.1)',
-    strokes: '#0000ff',
+    fills: [{ type: 'SOLID', color: 'rgba(0,0,255,0.1)' }],
+    strokes: [{ type: 'SOLID', color: '#0000ff' }],
     selectable: false,
   });
   private editor: Editor;
@@ -288,7 +288,7 @@ export class Transformer extends AbstractPrimitive {
     this.eventMode = 'dynamic';
     this.interactive = true;
     this.editor = editor;
-    this.addChild(this.overlay);
+    // this.addChild(this.overlay);
     // 创建控制点
     for (const handle of handles) {
       this.handleMap[handle.handleType] = new Handler(

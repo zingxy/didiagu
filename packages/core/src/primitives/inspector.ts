@@ -33,4 +33,11 @@ export const BASE_INSPECTOR_FIELDS: InspectorSection[] = [
       { key: 'h', label: 'H', type: 'number', min: 0 },
     ],
   },
+  {
+    title: 'Appearance',
+    fields: [
+      { key: 'fills', label: 'Fills', type: 'number' },
+      { key: 'strokes', label: 'Strokes', type: 'number' },
+    ],
+  },
 ];

@@ -1,6 +1,7 @@
 import { Graphics, Container } from 'pixi.js';
 import { nanoid } from 'nanoid';
 import { BASE_INSPECTOR_FIELDS, InspectorSection } from './inspector';
+import { IPaint } from './style';
 
 export const PRIMITIVE_MAP = {
   RECTANGLE: 'RECTANGLE',
@@ -35,9 +36,9 @@ export interface IBasePrimitive {
   scaleX: number;
   scaleY: number;
   // fill
-  fills: string;
+  fills: IPaint[];
   // stroke
-  strokes: string;
+  strokes: IPaint[];
   // 是否可选中
   selectable: boolean;
 }
@@ -57,7 +58,9 @@ export interface IFrame extends IBasePrimitive {
 
 export type IPrimitive = IEllipse | IRect | IFrame;
 
-export abstract class AbstractPrimitive
+export abstract class AbstractPrimitive<
+    T extends IBasePrimitive = IBasePrimitive
+  >
   extends Container
   implements IBasePrimitive
 {
@@ -67,8 +70,8 @@ export abstract class AbstractPrimitive
   axis: Graphics;
   w = 0;
   h = 0;
-  fills = 'grey';
-  strokes = '';
+  fills: IPaint[] = [];
+  strokes: IPaint[] = [];
   title = '';
   /**
    * 是否可选中
@@ -121,7 +124,7 @@ export abstract class AbstractPrimitive
     this.skew.y = value;
   }
 
-  updateAttr(attr: Partial<Omit<IBasePrimitive, 'uuid' | 'type'>>) {
+  updateAttr(attr: Partial<Omit<T, 'uuid' | 'type'>>) {
     Object.assign(this, attr);
     this.emit('attr.changed', attr);
     this.render();
@@ -160,5 +163,17 @@ export abstract class AbstractPrimitive
   ): void {
     (this as IBasePrimitive)[key] = value;
     this.render();
+  }
+  strokeAndFill(): void {
+    this.fills.forEach((fill) => {
+      if (fill.type === 'SOLID') {
+        this.graphics.fill(fill.color);
+      }
+    });
+    this.strokes.forEach((stroke) => {
+      if (stroke.type === 'SOLID') {
+        this.graphics.stroke(stroke.color);
+      }
+    });
   }
 }

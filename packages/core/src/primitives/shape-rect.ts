@@ -16,11 +16,6 @@ export class Rect extends AbstractPrimitive implements IRect {
   render(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
-    if (this.strokes) {
-      this.graphics.stroke(this.strokes);
-    }
-    if (this.fills) {
-      this.graphics.fill(this.fills);
-    }
+    this.strokeAndFill();
   }
 }

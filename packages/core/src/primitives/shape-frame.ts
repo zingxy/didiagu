@@ -9,7 +9,6 @@ export class Frame extends AbstractPrimitive implements IFrame {
   constructor(config: IFrameConfig) {
     super();
     Object.assign(this, config);
-    this.fills = 'white';
     this.maskGraphics = new Graphics();
     this.mask = this.maskGraphics;
     this.addChild(this.maskGraphics);
@@ -21,15 +20,10 @@ export class Frame extends AbstractPrimitive implements IFrame {
   override render(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
+    this.strokeAndFill();
+
     this.maskGraphics.clear();
     this.maskGraphics.rect(0, 0, this.w, this.h);
-    this.maskGraphics.fill('white');
-
-    if (this.strokes) {
-      this.graphics.stroke(this.strokes);
-    }
-    if (this.fills) {
-      this.graphics.fill(this.fills);
-    }
+    this.maskGraphics.fill('#ffffff');
   }
 }

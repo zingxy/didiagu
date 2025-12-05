@@ -19,7 +19,7 @@ export class DrawRectTool extends AbstractDrawShapeTool {
   readonly desc = 'Draw Rectangle';
 
   override createShape() {
-    return new Rect({});
+    return new Rect({ fills: [{ type: 'SOLID', color: 'grey' }] });
   }
 
   override finalizeShape(): void {

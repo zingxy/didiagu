@@ -1,6 +1,6 @@
 import { DidiaguPointerEvent } from '../dispatcher';
 import { Editor } from '../editor';
-import { AbstractPrimitive, Rect } from '../primitives';
+import { Rect } from '../primitives';
 import type { ITool } from './types';
 import { registerAction } from '../action-manager';
 
@@ -29,18 +29,16 @@ export class SelectTool implements ITool {
       y: 0,
       w: 0,
       h: 0,
-      strokes: '#3399FF',
-      fills: 'rgba(51,153,255,0.2)',
+      strokes: [{ type: 'SOLID', color: '#3399FF' }],
+      fills: [{ type: 'SOLID', color: 'rgba(51,153,255,0.2)' }],
     });
 
     this.editor.sceneGraph.addChild('helper', this.selectBox);
   }
 
-  onActivate() {
-  }
+  onActivate() {}
 
-  onDeactivate() {
-  }
+  onDeactivate() {}
 
   /**框选逻辑 */
   onPointerDown(e: DidiaguPointerEvent): boolean | void {
