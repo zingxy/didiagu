@@ -20,4 +20,14 @@ export class DrawPictureTool extends AbstractDrawShapeTool {
   override finalizeShape(): void {
     // Implementation for finalizing the rectangle shape
   }
+
+  protected override getAspectRatio(): number | null {
+    // 获取图片的原始宽高比
+    const picture = this['drawingShape'] as Picture;
+    if (picture && picture.texture) {
+      const { width, height } = picture.texture;
+      return width / height;
+    }
+    return null;
+  }
 }
