@@ -18,7 +18,7 @@ export class Ellipse extends AbstractPrimitive implements IEllipse {
   override render(): void {
     this.graphics.clear();
     this.graphics.ellipse(this.w / 2, this.h / 2, this.w / 2, this.h / 2);
-    this.strokeAndFill();
+    this.applyFillsAndStrokes();
   }
 
   override drawOutline(graphics: Graphics): void {

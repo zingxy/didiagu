@@ -61,8 +61,8 @@ export class Editor extends EventBus {
   /**
    * @param toolId 工具id
    */
-  setCurrentTool = (toolId: string) => {
-    this.toolManager.setCurrentTool(toolId);
+  setCurrentTool = (toolId: string, ...args: unknown[]) => {
+    this.toolManager.setCurrentTool(toolId, ...args);
   };
 
   getCurrentToolId = () => {

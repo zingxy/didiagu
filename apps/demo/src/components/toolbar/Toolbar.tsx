@@ -9,12 +9,12 @@ import {
   PenToolIcon,
   TextToolIcon,
   ActionToolIcon,
-  CommentToolIcon,
   TopoGraphIcon,
+  PictureToolIcon,
 } from '@icons';
 import { useEffect } from 'react';
 
-import { Popover } from 'antd';
+import { Popover, Upload } from 'antd';
 
 import clsx from 'clsx';
 import type { ToolType } from '@didiagu/core';
@@ -23,14 +23,16 @@ import { useAppState } from '@/store';
 interface ToolbarIconProps {
   selected?: boolean;
   name: string;
-  onClick?: () => void;
+  tool: ToolConfig;
+  onClick: (...args: unknown[]) => void;
 }
 
-const ToolbarToolIcon: React.FC<React.PropsWithChildren<ToolbarIconProps>> = ({
+const ToolItem: React.FC<React.PropsWithChildren<ToolbarIconProps>> = ({
   children,
   selected,
-  onClick,
   name,
+  tool,
+  onClick,
 }) => {
   const classnames = clsx(
     'text-3xl cursor-pointer  rounded-md p-1 inline-block',
@@ -42,9 +44,31 @@ const ToolbarToolIcon: React.FC<React.PropsWithChildren<ToolbarIconProps>> = ({
   );
   return (
     <Popover trigger="hover" content={name}>
-      <span className={classnames} onClick={onClick}>
-        {children}
-      </span>
+      {tool.trigger === 'upload' ? (
+        <Upload
+          accept="image/*"
+          showUploadList={false}
+          beforeUpload={async (file) => {
+            console.log('file', file);
+            const reader = new FileReader();
+            reader.onload = () => {
+              const result = reader.result as string;
+              onClick?.(result);
+            };
+            reader.readAsDataURL(file);
+            return false; // 阻止自动上传
+          }}
+        >
+          <span className={classnames}>{children}</span>
+        </Upload>
+      ) : (
+        <span
+          className={classnames}
+          onClick={tool.trigger ? undefined : onClick}
+        >
+          {children}
+        </span>
+      )}
     </Popover>
   );
 };
@@ -65,19 +89,20 @@ const ModeSwitcher: React.FC = () => {
   );
 };
 
-interface ToolbarConfig {
+interface ToolConfig {
   icon: React.ReactNode;
   name: ToolType | string;
+  trigger?: 'click' | 'upload';
 }
 
-const tools: ToolbarConfig[] = [
+const tools: ToolConfig[] = [
   { icon: <SelectToolIcon />, name: 'SELECT' },
   { icon: <FrameToolIcon />, name: 'FRAME' },
   { icon: <RectToolIcon />, name: 'RECTANGLE' },
   { icon: <PenToolIcon />, name: 'Pen' },
   { icon: <TextToolIcon />, name: 'Text' },
   { icon: <TopoGraphIcon />, name: 'Graph' },
-  { icon: <CommentToolIcon />, name: 'Comment' },
+  { icon: <PictureToolIcon />, name: 'PICTURE', trigger: 'upload' },
   { icon: <ActionToolIcon />, name: 'ELLIPSE' },
 ];
 
@@ -98,14 +123,15 @@ const ToolSelector: React.FC = () => {
     <div className="flex-1 flex justify-between items-center items-center p-1 rounded-md">
       {tools.map((tool) => {
         return (
-          <ToolbarToolIcon
+          <ToolItem
             selected={currentToolId === tool.name}
             key={tool.name}
             name={tool.name}
-            onClick={() => editor?.setCurrentTool(tool.name)}
+            onClick={(...args) => editor?.setCurrentTool(tool.name, ...args)}
+            tool={tool}
           >
             {tool.icon}
-          </ToolbarToolIcon>
+          </ToolItem>
         );
       })}
     </div>

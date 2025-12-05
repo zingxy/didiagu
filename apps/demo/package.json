@@ -14,7 +14,7 @@
     "@didiagu/core": "workspace:*",
     "@didiagu/shared": "workspace:*",
     "@tailwindcss/vite": "^4.1.17",
-    "antd": "^5.28.1",
+    "antd": "^6.0.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "rbush": "^4.0.1",

@@ -13,6 +13,7 @@ import { DrawRectTool } from './tool-draw-rect';
 import { DrawEllipseTool } from './tool-draw-ellipse ';
 import { DrawFrameTool } from './tool-draw-frame';
 import { SelectTool } from './tool-select';
+import { DrawPictureTool } from './tool-draw-picture';
 import { EventBus } from '../event-bus';
 import { IEventHandler } from '../dispatcher';
 export interface ToolManagerEvents {
@@ -28,6 +29,7 @@ export class ToolManager implements IEventHandler {
     this.bus = editor.bus;
     this.register(new DrawRectTool(editor));
     this.register(new DrawEllipseTool(editor));
+    this.register(new DrawPictureTool(editor));
     this.register(new DrawFrameTool(editor));
     this.register(new SelectTool(editor));
     this.setCurrentTool('SELECT');
@@ -37,13 +39,13 @@ export class ToolManager implements IEventHandler {
     this.tools.set(tool.id, tool);
   }
 
-  setCurrentTool(id: string) {
+  setCurrentTool(id: string, ...args: unknown[]) {
     const nextTool = this.tools.get(id);
     if (!nextTool) return;
     if (this.currentTool?.id === nextTool.id) return;
     this.currentTool?.onDeactivate?.();
     this.currentTool = nextTool;
-    this.currentTool.onActivate?.();
+    this.currentTool.onActivate?.(...args);
     this.bus.emit('tool.changed', this.currentTool.id);
   }
 
@@ -67,5 +69,5 @@ export class ToolManager implements IEventHandler {
   }
 }
 
-type Tools = [DrawRectTool, DrawEllipseTool, DrawFrameTool, SelectTool];
+type Tools = [DrawRectTool, DrawEllipseTool, DrawPictureTool, DrawFrameTool, SelectTool];
 export type ToolType = Tools[number]['id'];

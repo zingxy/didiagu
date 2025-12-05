@@ -19,11 +19,6 @@ abstract class AbstractDrawShapeTool implements ITool {
   constructor(editor: Editor) {
     this.editor = editor;
   }
-  onActivate() {
-  }
-
-  onDeactivate() {
-  }
 
   onPointerDown(e: FederatedPointerEvent) {
     if (e.button !== 0) return; // only left button

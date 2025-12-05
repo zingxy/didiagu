@@ -20,7 +20,7 @@ export class Frame extends AbstractPrimitive implements IFrame {
   override render(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
-    this.strokeAndFill();
+    this.applyFillsAndStrokes();
 
     this.maskGraphics.clear();
     this.maskGraphics.rect(0, 0, this.w, this.h);

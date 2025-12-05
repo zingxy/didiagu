@@ -9,6 +9,7 @@ export const PRIMITIVE_MAP = {
   FRAME: 'FRAME',
   LAYER: 'LAYER',
   TRANSFORMER: 'TRANSFORMER',
+  PICTURE: 'PICTURE',
 } as const;
 
 export const OUTLINE_COLOR = '#1890ff';
@@ -20,7 +21,9 @@ export interface IBasePrimitive {
   readonly uuid: string;
   // 节点类型
   readonly type: string;
-  title: string;
+  // 名称
+  label: string;
+  // 初始尺寸
   w: number;
   h: number;
 
@@ -56,7 +59,13 @@ export interface IFrame extends IBasePrimitive {
   type: 'FRAME';
 }
 
-export type IPrimitive = IEllipse | IRect | IFrame;
+export interface IPicture extends IBasePrimitive {
+  type: 'PICTURE';
+  src: string;
+  scaleMode?: 'FILL' | 'FIT' | 'STRETCH';
+}
+
+export type IPrimitive = IEllipse | IRect | IFrame | IPicture;
 
 export abstract class AbstractPrimitive<
     T extends IBasePrimitive = IBasePrimitive
@@ -72,7 +81,6 @@ export abstract class AbstractPrimitive<
   h = 0;
   fills: IPaint[] = [];
   strokes: IPaint[] = [];
-  title = '';
   /**
    * 是否可选中
    */
@@ -164,7 +172,7 @@ export abstract class AbstractPrimitive<
     (this as IBasePrimitive)[key] = value;
     this.render();
   }
-  strokeAndFill(): void {
+  applyFillsAndStrokes(): void {
     this.fills.forEach((fill) => {
       if (fill.type === 'SOLID') {
         this.graphics.fill(fill.color);

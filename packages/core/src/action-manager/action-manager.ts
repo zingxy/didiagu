@@ -10,7 +10,7 @@ interface Action {
   /**
    * function to perform the action
    */
-  perform: ({ editor }: { editor: Editor }) => void;
+  perform: ({ editor }: { editor: Editor }) => void|Promise<void>;
   /**
    * optional predicate to determine if action is available
    */

@@ -6,7 +6,7 @@ export interface ITool extends Partial<IEventHandler> {
   desc: string;
 
   // 生命周期
-  onActivate?: () => void;
+  onActivate?: (...args: unknown[]) => void;
   onDeactivate?: () => void;
 }
 
