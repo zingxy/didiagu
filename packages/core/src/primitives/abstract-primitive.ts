@@ -1,6 +1,6 @@
 import { Graphics, Container } from 'pixi.js';
 import { nanoid } from 'nanoid';
-import { BASE_INSPECTOR_FIELDS, InspectorSection } from './inspector';
+import { BASE_INSPECTOR_SCHEMA, InspectorSchema } from './inspector';
 import { IPaint } from './style';
 
 export const PRIMITIVE_MAP = {
@@ -42,6 +42,7 @@ export interface IBasePrimitive {
   fills: IPaint[];
   // stroke
   strokes: IPaint[];
+  strokeWidth: number;
   // 是否可选中
   selectable: boolean;
 }
@@ -81,6 +82,7 @@ export abstract class AbstractPrimitive<
   h = 0;
   fills: IPaint[] = [];
   strokes: IPaint[] = [];
+  strokeWidth: number = 1;
   /**
    * 是否可选中
    */
@@ -154,8 +156,8 @@ export abstract class AbstractPrimitive<
   /**
    * 获取属性面板字段schema
    */
-  getInspectorFields(): InspectorSection[] {
-    return BASE_INSPECTOR_FIELDS;
+  getInspectorSchema(): InspectorSchema {
+    return BASE_INSPECTOR_SCHEMA;
   }
   /**
    * @description 获取参数
@@ -180,7 +182,7 @@ export abstract class AbstractPrimitive<
     });
     this.strokes.forEach((stroke) => {
       if (stroke.type === 'SOLID') {
-        this.graphics.stroke(stroke.color);
+        this.graphics.stroke({ color: stroke.color, width: this.strokeWidth });
       }
     });
   }

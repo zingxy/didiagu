@@ -1,43 +1,108 @@
-export interface InspectorField {
-  key: string;
-  label: string;
-  type: 'number';
-  min?: number;
-  max?: number;
-  step?: number;
-  options?: string[];
+// 基于 JSON Schema 的属性定义
+export interface InspectorSchema {
+  type: 'object';
+  properties: Record<string, InspectorProperty>;
+  groups?: InspectorGroup[];
 }
 
-export interface InspectorSection {
+export interface InspectorProperty {
+  type: 'number' | 'string' | 'boolean' | 'color' | 'array' | 'object';
+  title?: string;
+  description?: string;
+  default?: any;
+
+  // 数值类型
+  minimum?: number;
+  maximum?: number;
+  multipleOf?: number;
+
+  // 字符串类型
+  enum?: any[];
+  enumNames?: string[];
+
+  // 数组类型
+  items?: InspectorProperty;
+  minItems?: number;
+  maxItems?: number;
+
+  // 对象类型
+  properties?: Record<string, InspectorProperty>;
+
+  // UI 提示
+  'ui:widget'?: string;
+  'ui:options'?: any;
+}
+
+export interface InspectorGroup {
   title: string;
-  fields: InspectorField[];
+  properties: string[];
+  collapsible?: boolean;
 }
 
-export const BASE_INSPECTOR_FIELDS: InspectorSection[] = [
-  {
-    title: 'Transform',
-    fields: [
-      { key: 'x', label: 'X', type: 'number' },
-      { key: 'y', label: 'Y', type: 'number' },
-      { key: 'scaleX', label: 'ScaleX', type: 'number', min: 0.1, step: 0.1 },
-      { key: 'scaleY', label: 'ScaleY', type: 'number', min: 0.1, step: 0.1 },
-      { key: 'skewX', label: 'SkewX', type: 'number', step: 1 },
-      { key: 'skewY', label: 'SkewY', type: 'number', step: 1 },
-      { key: 'rotation', label: 'Rotation', type: 'number', step: 1 },
-    ],
+export const BASE_INSPECTOR_SCHEMA: InspectorSchema = {
+  type: 'object',
+  properties: {
+    x: { type: 'number', title: 'X' },
+    y: { type: 'number', title: 'Y' },
+    w: { type: 'number', title: 'Width', minimum: 1 },
+    h: { type: 'number', title: 'Height', minimum: 1 },
+    rotation: { type: 'number', title: 'Rotation', multipleOf: 1 },
+    scaleX: {
+      type: 'number',
+      title: 'Scale X',
+      minimum: 0.01,
+      multipleOf: 0.1,
+    },
+    scaleY: {
+      type: 'number',
+      title: 'Scale Y',
+      minimum: 0.01,
+      multipleOf: 0.1,
+    },
+    skewX: { type: 'number', title: 'Skew X', multipleOf: 1 },
+    skewY: { type: 'number', title: 'Skew Y', multipleOf: 1 },
+    opacity: {
+      type: 'number',
+      title: 'Opacity',
+      minimum: 0,
+      maximum: 1,
+      multipleOf: 0.01,
+      'ui:widget': 'slider',
+    },
+    fills: {
+      type: 'array',
+      title: 'Fills',
+      items: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['SOLID'], default: 'SOLID' },
+          color: { type: 'color', title: 'Color', default: '#000000' },
+        },
+      },
+      maxItems: 5,
+    },
+    strokes: {
+      type: 'array',
+      title: 'Strokes',
+      items: {
+        type: 'object',
+        properties: {
+          type: { type: 'string', enum: ['SOLID'], default: 'SOLID' },
+          color: { type: 'color', title: 'Color', default: '#000000' },
+        },
+      },
+      maxItems: 5,
+    },
+    strokeWidth: { type: 'number', title: 'Stroke Width', minimum: 0 },
   },
-  {
-    title: 'Dimensions',
-    fields: [
-      { key: 'w', label: 'W', type: 'number', min: 0 },
-      { key: 'h', label: 'H', type: 'number', min: 0 },
-    ],
-  },
-  {
-    title: 'Appearance',
-    fields: [
-      { key: 'fills', label: 'Fills', type: 'number' },
-      { key: 'strokes', label: 'Strokes', type: 'number' },
-    ],
-  },
-];
+  groups: [
+    { title: 'Transform', properties: ['x', 'y', 'rotation'] },
+    { title: 'Scale', properties: ['scaleX', 'scaleY'], collapsible: true },
+    { title: 'Skew', properties: ['skewX', 'skewY'], collapsible: true },
+    { title: 'Dimensions', properties: ['w', 'h'] },
+    {
+      title: 'Appearance',
+      properties: ['fills', 'strokes', 'strokeWidth', 'opacity'],
+    },
+  ],
+};

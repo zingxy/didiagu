@@ -1,22 +1,29 @@
 import { useAppState } from '@/store';
 import type React from 'react';
-import { Typography, Card, Form, InputNumber } from 'antd';
+import {
+  Typography,
+  Card,
+  Form,
+  InputNumber,
+  ColorPicker,
+  Input,
+  Switch,
+  Slider,
+  Button,
+  Space,
+} from 'antd';
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons';
 import type {
-  InspectorField,
-  InspectorSection,
+  InspectorSchema,
+  InspectorProperty,
 } from '@didiagu/core/src/primitives/inspector';
 import type { AbstractPrimitive } from '@didiagu/core';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 
 const { Text } = Typography;
 
 const Inspector: React.FC = () => {
   const selection = useAppState((state) => state.selection);
-
-  const [form] = Form.useForm();
-  useEffect(() => {
-    form.resetFields();
-  }, [selection, form]);
 
   if (selection.length === 0) {
     return (
@@ -32,77 +39,285 @@ const Inspector: React.FC = () => {
   }
 
   const [firstSelected] = selection;
-  const schema = firstSelected.getInspectorFields();
-  const initialValues = schema.reduce((acc, section) => {
-    section.fields.forEach((field) => {
-      acc[field.key] = firstSelected.getParameter(field.key as any);
-    });
-    return acc;
-  }, {} as Record<string, any>);
+  const schema = firstSelected.getInspectorSchema();
 
   return (
-    <Card size="small" className="shadow-sm h-full">
-      <Form
-        initialValues={initialValues}
-        form={form}
-        variant="filled"
-        colon={false}
-        labelAlign="right"
-        onBlur={() => {
-          const values = form.getFieldsValue();
-          Object.entries(values).forEach(([key, value]) => {
-            firstSelected.setParameter(key as any, value);
-          });
-        }}
-      >
-        {schema.map((section) => (
-          <InspectorSectionComp
-            key={section.title}
-            section={section}
-            target={firstSelected}
-          />
-        ))}
-      </Form>
+    <Card size="small" className="shadow-sm h-full overflow-auto">
+      <SchemaForm schema={schema} target={firstSelected} key={firstSelected.uuid} />
     </Card>
   );
 };
 
-interface InspectorFieldProps {
-  field: InspectorField;
+// Schema Form 渲染器
+const SchemaForm: React.FC<{
+  schema: InspectorSchema;
   target: AbstractPrimitive;
-}
+}> = ({ schema, target }) => {
+  const [formData, setFormData] = useState<Record<string, any>>(() => {
+    const data: Record<string, any> = {};
+    Object.keys(schema.properties).forEach((key) => {
+      data[key] = target.getParameter(key as any);
+    });
+    return data;
+  });
 
-const InspectorItem: React.FC<InspectorFieldProps> = ({ field }) => {
+  useEffect(() => {
+    const initFormData = () => {
+      const data: Record<string, any> = {};
+      Object.keys(schema.properties).forEach((key) => {
+        data[key] = target.getParameter(key as any);
+      });
+      setFormData(data);
+    };
+    target.on('attr.changed', initFormData);
+    return () => {
+      target.off('attr.changed', initFormData);
+    };
+  }, [target, schema.properties]);
+
+  const handleChange = (key: string, value: any) => {
+    setFormData((prev) => ({ ...prev, [key]: value }));
+    target.setParameter(key as any, value);
+  };
+
   return (
-    <Form.Item
-      name={field.key}
-      label={field.label}
-      labelCol={{ style: { width: 60 } }}
-      style={{ marginBottom: 6 }}
-    >
-      <InputNumber
-        min={field.min}
-        max={field.max}
-        step={field.step ?? 1}
-        size="small"
-        style={{ width: 70 }}
-      />
-    </Form.Item>
+    <div>
+      {schema.groups?.map((group) => (
+        <div key={group.title} style={{ marginBottom: 16 }}>
+          <Typography.Title level={5}>{group.title}</Typography.Title>
+          <div className="grid grid-cols-2 gap-x-2">
+            {group.properties.map((propKey) => {
+              const prop = schema.properties[propKey];
+              if (!prop) return null;
+              return (
+                <div
+                  key={propKey}
+                  className={
+                    prop.type === 'array' || prop['ui:widget'] === 'slider'
+                      ? 'col-span-2'
+                      : 'col-span-1'
+                  }
+                >
+                  <PropertyField
+                    propKey={propKey}
+                    prop={prop}
+                    value={formData[propKey]}
+                    onChange={(value) => handleChange(propKey, value)}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
   );
 };
 
-const InspectorSectionComp: React.FC<{
-  section: InspectorSection;
-  target: AbstractPrimitive;
-}> = ({ section, target }) => {
-  return (
-    <div>
-      <Typography.Title level={5}>{section.title}</Typography.Title>
-      <div className="grid grid-cols-2">
-        {section.fields.map((field) => (
-          <InspectorItem key={field.key} field={field} target={target} />
-        ))}
+// 属性字段渲染器
+const PropertyField: React.FC<{
+  propKey: string;
+  prop: InspectorProperty;
+  value: any;
+  onChange: (value: any) => void;
+}> = ({ propKey, prop, value, onChange }) => {
+  const widget = prop['ui:widget'];
+
+  if (prop.type === 'number') {
+    if (widget === 'slider') {
+      return (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 12, marginBottom: 4 }}>{prop.title}</div>
+          <Slider
+            min={prop.minimum ?? 0}
+            max={prop.maximum ?? 100}
+            step={prop.multipleOf ?? 1}
+            value={value}
+            onChange={onChange}
+          />
+        </div>
+      );
+    }
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 12, marginBottom: 4 }}>{prop.title}</div>
+        <InputNumber
+          value={value}
+          onChange={onChange}
+          min={prop.minimum}
+          max={prop.maximum}
+          step={prop.multipleOf ?? 1}
+          size="small"
+          style={{ width: '100%' }}
+        />
       </div>
+    );
+  }
+
+  if (prop.type === 'string') {
+    if (prop.enum) {
+      return (
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ fontSize: 12, marginBottom: 4 }}>{prop.title}</div>
+          <Input
+            value={value}
+            onChange={(e) => onChange(e.target.value)}
+            size="small"
+          />
+        </div>
+      );
+    }
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 12, marginBottom: 4 }}>{prop.title}</div>
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          size="small"
+        />
+      </div>
+    );
+  }
+
+  if (prop.type === 'boolean') {
+    return (
+      <div
+        style={{
+          marginBottom: 8,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+        }}
+      >
+        <div style={{ fontSize: 12 }}>{prop.title}</div>
+        <Switch checked={value} onChange={onChange} size="small" />
+      </div>
+    );
+  }
+
+  if (prop.type === 'color') {
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ fontSize: 12, marginBottom: 4 }}>{prop.title}</div>
+        <ColorPicker
+          value={value}
+          onChange={(color) => onChange(color.toHexString())}
+          size="small"
+          showText
+        />
+      </div>
+    );
+  }
+
+  if (prop.type === 'array') {
+    return <ArrayField prop={prop} value={value} onChange={onChange} />;
+  }
+
+  return null;
+};
+
+// 数组字段
+const ArrayField: React.FC<{
+  prop: InspectorProperty;
+  value: any[];
+  onChange: (value: any[]) => void;
+}> = ({ prop, value = [], onChange }) => {
+  const handleAdd = () => {
+    const newItem = prop.items?.properties
+      ? Object.fromEntries(
+          Object.entries(prop.items.properties).map(([k, v]) => [k, v.default])
+        )
+      : prop.items?.default;
+    onChange([...value, newItem]);
+  };
+
+  const handleRemove = (index: number) => {
+    onChange(value.filter((_, i) => i !== index));
+  };
+
+  const handleItemChange = (index: number, itemValue: any) => {
+    const newValue = [...value];
+    newValue[index] = itemValue;
+    onChange(newValue);
+  };
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ fontSize: 12, fontWeight: 500, marginBottom: 8 }}>
+        {prop.title}
+      </div>
+      <Space direction="vertical" style={{ width: '100%' }} size="small">
+        {value.map((item, index) => (
+          <Card key={index} size="small" style={{ background: '#fafafa' }}>
+            {prop.items?.type === 'object' && prop.items.properties ? (
+              <Space
+                direction="vertical"
+                style={{ width: '100%' }}
+                size="small"
+              >
+                {Object.entries(prop.items.properties).map(
+                  ([key, itemProp]) => (
+                    <div
+                      key={key}
+                      style={{ display: 'flex', gap: 8, alignItems: 'center' }}
+                    >
+                      <span style={{ width: 60, fontSize: 12 }}>
+                        {itemProp.title || key}:
+                      </span>
+                      {itemProp.type === 'color' ? (
+                        <ColorPicker
+                          value={item[key]}
+                          onChange={(color) =>
+                            handleItemChange(index, {
+                              ...item,
+                              [key]: color.toHexString(),
+                            })
+                          }
+                          size="small"
+                          showText
+                        />
+                      ) : (
+                        <Input
+                          value={item[key]}
+                          onChange={(e) =>
+                            handleItemChange(index, {
+                              ...item,
+                              [key]: e.target.value,
+                            })
+                          }
+                          size="small"
+                          style={{ flex: 1 }}
+                        />
+                      )}
+                    </div>
+                  )
+                )}
+                <Button
+                  type="text"
+                  danger
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleRemove(index)}
+                  block
+                >
+                  删除
+                </Button>
+              </Space>
+            ) : null}
+          </Card>
+        ))}
+        {(!prop.maxItems || value.length < prop.maxItems) && (
+          <Button
+            type="dashed"
+            size="small"
+            icon={<PlusOutlined />}
+            onClick={handleAdd}
+            block
+          >
+            添加
+          </Button>
+        )}
+      </Space>
     </div>
   );
 };

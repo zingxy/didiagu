@@ -20,7 +20,7 @@ export class DrawRectTool extends AbstractDrawShapeTool {
 
   override createShape() {
     return new Rect({
-      fills: [{ type: 'SOLID', color: 'grey' }],
+      strokes: [{ type: 'SOLID', color: '#000000' }],
     });
   }
 
