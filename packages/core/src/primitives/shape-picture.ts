@@ -1,22 +1,16 @@
-import {
-  AbstractPrimitive,
-  IPicture,
-  PRIMITIVE_MAP,
-} from './abstract-primitive';
+import { AbstractPrimitive, IPicture, PrmitiveMap } from './abstract-primitive';
 import * as PIXI from 'pixi.js';
 
 type IPictureConfig = Partial<IPicture>;
 
 export class Picture extends AbstractPrimitive<IPicture> implements IPicture {
-  readonly type = PRIMITIVE_MAP.PICTURE;
+  readonly type = PrmitiveMap.Picture;
   src: string = '';
   texture: PIXI.Texture | null = null;
   picture: PIXI.Sprite;
   constructor(config: IPictureConfig) {
     super();
     Object.assign(this, config);
-    this.eventMode = 'dynamic';
-    this.interactive = true;
     this.picture = new PIXI.Sprite();
     this.addChild(this.picture);
     if (this.src) {

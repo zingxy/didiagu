@@ -1,10 +1,10 @@
 import { Graphics } from 'pixi.js';
-import { AbstractPrimitive, IFrame, PRIMITIVE_MAP } from './abstract-primitive';
+import { AbstractPrimitive, IFrame, PrmitiveMap } from './abstract-primitive';
 
 type IFrameConfig = Partial<IFrame>;
 
 export class Frame extends AbstractPrimitive implements IFrame {
-  readonly type = PRIMITIVE_MAP.FRAME;
+  readonly type = PrmitiveMap.Frame;
   maskGraphics: Graphics;
   constructor(config: IFrameConfig) {
     super();

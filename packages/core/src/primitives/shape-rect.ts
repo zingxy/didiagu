@@ -1,15 +1,13 @@
-import { AbstractPrimitive, IRect, PRIMITIVE_MAP } from './abstract-primitive';
+import { AbstractPrimitive, IRect, PrmitiveMap } from './abstract-primitive';
 
 type IRectConfig = Partial<IRect>;
 
 export class Rect extends AbstractPrimitive implements IRect {
-  readonly type = PRIMITIVE_MAP.RECTANGLE;
+  readonly type = PrmitiveMap.Rect;
   r: number = 0;
   constructor(config: IRectConfig) {
     super();
     Object.assign(this, config);
-    this.eventMode = 'static';
-    this.interactive = true;
     this.render();
   }
 

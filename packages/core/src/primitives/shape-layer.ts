@@ -1,7 +1,4 @@
-import {
-  AbstractPrimitive,
-  PRIMITIVE_MAP,
-} from './abstract-primitive';
+import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
 
 export interface LayerConfig {
   /** 图层 ID */
@@ -25,7 +22,7 @@ export class Layer extends AbstractPrimitive {
   public name: string;
   public locked: boolean = false;
   public trackable: boolean = true;
-  readonly type = PRIMITIVE_MAP.LAYER;
+  readonly type = PrmitiveMap.Layer;
   constructor(config: LayerConfig) {
     super();
     this.id = config.id;

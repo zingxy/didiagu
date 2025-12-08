@@ -3,24 +3,25 @@ import { nanoid } from 'nanoid';
 import { BASE_INSPECTOR_SCHEMA, InspectorSchema } from './inspector';
 import { IPaint } from './style';
 
-export const PRIMITIVE_MAP = {
-  RECTANGLE: 'RECTANGLE',
-  ELLIPSE: 'ELLIPSE',
-  FRAME: 'FRAME',
-  LAYER: 'LAYER',
-  TRANSFORMER: 'TRANSFORMER',
-  PICTURE: 'PICTURE',
+export const PrmitiveMap = {
+  Rect: 'Rect',
+  Ellipse: 'Ellipse',
+  Frame: 'Frame',
+  Layer: 'Layer',
+  Transformer: 'Transformer',
+  Picture: 'Picture',
+  Text: 'Text',
 } as const;
 
 export const OUTLINE_COLOR = '#1890ff';
 
-export type PrimitiveType = (typeof PRIMITIVE_MAP)[keyof typeof PRIMITIVE_MAP];
+export type PrimitiveType = (typeof PrmitiveMap)[keyof typeof PrmitiveMap];
 
 export interface IBasePrimitive {
   // uuid, 对象的唯一id
   readonly uuid: string;
   // 节点类型
-  readonly type: string;
+  readonly type: PrimitiveType;
   // 名称
   label: string;
   // 初始尺寸
@@ -48,22 +49,26 @@ export interface IBasePrimitive {
 }
 
 export interface IRect extends IBasePrimitive {
-  type: 'RECTANGLE';
+  type: 'Rect';
   r: number;
 }
 
 export interface IEllipse extends IBasePrimitive {
-  type: 'ELLIPSE';
+  type: 'Ellipse';
 }
 
 export interface IFrame extends IBasePrimitive {
-  type: 'FRAME';
+  type: 'Frame';
 }
 
 export interface IPicture extends IBasePrimitive {
-  type: 'PICTURE';
+  type: 'Picture';
   src: string;
   scaleMode?: 'FILL' | 'FIT' | 'STRETCH';
+}
+export interface IText extends IBasePrimitive {
+  type: 'Text';
+  text: string;
 }
 
 export type IPrimitive = IEllipse | IRect | IFrame | IPicture;
@@ -74,7 +79,7 @@ export abstract class AbstractPrimitive<
   extends Container
   implements IBasePrimitive
 {
-  abstract readonly type: string;
+  abstract readonly type: PrimitiveType;
   uuid: string;
   graphics: Graphics;
   axis: Graphics;
@@ -92,7 +97,7 @@ export abstract class AbstractPrimitive<
     this.uuid = nanoid();
     this.graphics = new Graphics();
     this.addChild(this.graphics);
-    this.eventMode = 'auto';
+    this.eventMode = 'dynamic';
     this.interactive = true;
     this.axis = new Graphics();
     this.addChild(this.axis);

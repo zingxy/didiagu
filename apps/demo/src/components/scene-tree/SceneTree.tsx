@@ -7,42 +7,42 @@ import { DownOutlined } from '@ant-design/icons';
 import clsx from 'clsx';
 
 const SHAPE_MAP: Record<PrimitiveType, { icon: React.ReactNode }> = {
-  RECTANGLE: {
+  Rect: {
     icon: (
       <span className="w-full h-full flex justify-center items-center">
         <RectToolIcon />
       </span>
     ),
   },
-  FRAME: {
+  Frame: {
     icon: (
       <span className="w-full h-full flex justify-center items-center">
         <FrameToolIcon />
       </span>
     ),
   },
-  ELLIPSE: {
+  Ellipse: {
     icon: (
       <span className="w-full h-full flex justify-center items-center">
         <RectToolIcon />
       </span>
     ),
   },
-  LAYER: {
+  Layer: {
     icon: (
       <span className="w-full h-full flex justify-center items-center">
         <RectToolIcon />
       </span>
     ),
   },
-  PICTURE: {
+  Picture: {
     icon: (
       <span className="w-full h-full flex justify-center items-center">
         <RectToolIcon />
       </span>
     ),
   },
-  TRANSFORMER: {
+  Transformer: {
     icon: (
       <span className="w-full h-full flex justify-center items-center">
         <RectToolIcon />

@@ -1,5 +1,5 @@
 import { FederatedPointerEvent, Matrix, Bounds } from 'pixi.js';
-import { AbstractPrimitive } from './abstract-primitive';
+import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
 import { decompose } from '@didiagu/math';
@@ -270,7 +270,7 @@ export class Handler extends Rect {
  * @see {@link Transformer.applyTransform} to update selected primitives
  */
 export class Transformer extends AbstractPrimitive {
-  override readonly type = 'TRANSFORMER';
+  override readonly type = PrmitiveMap.Transformer;
   private selectedPrimitives: AbstractPrimitive[] = [];
   private handleMap = {} as Record<HandleType, Handler>;
   private dragging = false;
