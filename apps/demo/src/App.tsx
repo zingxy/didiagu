@@ -54,21 +54,15 @@ function App() {
 
   return (
     <>
-      <Splitter className="h-screen" style={{ height: '100vh' }}>
-        <Splitter.Panel min={200} max="30%" defaultSize={300} resizable>
-          <SceneTree />
-        </Splitter.Panel>
-        <Splitter.Panel>
-          <ContextMenu>
-            <div ref={containerRef} className="w-full h-full" />
-          </ContextMenu>
-        </Splitter.Panel>
-        <Splitter.Panel min={200} max="30%" defaultSize={300} resizable={false}>
-          <Inspector />
-        </Splitter.Panel>
-      </Splitter>
-      <Toolbar />
-      <CommandPalette />
+      <div className="w-screen h-screen max-w-screen max-h-screen overflow-clip">
+        <SceneTree />
+        <ContextMenu>
+          <div ref={containerRef} className="w-full h-full" />
+        </ContextMenu>
+        <Inspector />
+        <Toolbar />
+        <CommandPalette />
+      </div>
     </>
   );
 }

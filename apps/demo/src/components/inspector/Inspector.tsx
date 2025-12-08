@@ -19,6 +19,7 @@ import type {
 } from '@didiagu/core/src/primitives/inspector';
 import type { AbstractPrimitive } from '@didiagu/core';
 import { useEffect, useState } from 'react';
+import clsx from 'clsx';
 
 const { Text } = Typography;
 
@@ -42,9 +43,22 @@ const Inspector: React.FC = () => {
   const schema = firstSelected.getInspectorSchema();
 
   return (
-    <Card size="small" className="shadow-sm h-full overflow-auto">
-      <SchemaForm schema={schema} target={firstSelected} key={firstSelected.uuid} />
-    </Card>
+    <div
+      className={clsx(
+        'fixed right-4 top-4 bg-white w-70 rounded-xl shadow h-8 min-h-12',
+        {
+          'h-9/10': true,
+        }
+      )}
+    >
+      <Card size="small" className="shadow-sm h-full overflow-auto">
+        <SchemaForm
+          schema={schema}
+          target={firstSelected}
+          key={firstSelected.uuid}
+        />
+      </Card>
+    </div>
   );
 };
 
