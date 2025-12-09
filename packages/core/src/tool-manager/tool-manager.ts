@@ -14,11 +14,16 @@ import { DrawEllipseTool } from './tool-draw-ellipse ';
 import { DrawFrameTool } from './tool-draw-frame';
 import { SelectTool } from './tool-select';
 import { DrawPictureTool } from './tool-draw-picture';
+import { TextTool } from './tool-text';
 import { EventBus } from '../event-bus';
 import { IEventHandler } from '../dispatcher';
 export interface ToolManagerEvents {
   'tool.changed': (toolId: string) => void;
 }
+const tools: ITool[] = [];
+export const registerTool = (tool: ITool) => {
+  tools.push(tool);
+};
 
 // 工具管理器
 export class ToolManager implements IEventHandler {
@@ -32,6 +37,7 @@ export class ToolManager implements IEventHandler {
     this.register(new DrawPictureTool(editor));
     this.register(new DrawFrameTool(editor));
     this.register(new SelectTool(editor));
+    this.register(new TextTool(editor));
     this.setCurrentTool('SELECT');
   }
 
@@ -69,5 +75,12 @@ export class ToolManager implements IEventHandler {
   }
 }
 
-type Tools = [DrawRectTool, DrawEllipseTool, DrawPictureTool, DrawFrameTool, SelectTool];
+type Tools = [
+  DrawRectTool,
+  DrawEllipseTool,
+  DrawPictureTool,
+  DrawFrameTool,
+  SelectTool,
+  TextTool
+];
 export type ToolType = Tools[number]['id'];

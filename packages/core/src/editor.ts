@@ -6,6 +6,7 @@ import { ToolManager } from './tool-manager';
 import { Dispatcher } from './dispatcher';
 import { SelectionManager } from './selection';
 import { ActionsManager } from './action-manager';
+import { TextEditor } from './text-editor';
 
 export interface EditorEvents {
   // Define editor-specific events here
@@ -31,6 +32,7 @@ export class Editor extends EventBus {
   public dispatcher?: Dispatcher;
   public readonly selectionManager: SelectionManager;
   public readonly actionManager: ActionsManager;
+  public readonly textEditor: TextEditor;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
     super();
@@ -41,6 +43,7 @@ export class Editor extends EventBus {
     this.toolManager = new ToolManager(this);
     this.selectionManager = new SelectionManager(this);
     this.actionManager = new ActionsManager(this);
+    this.textEditor = new TextEditor(this);
 
     this.options = { ...defaultEditorOptions, ...options };
   }
@@ -53,7 +56,7 @@ export class Editor extends EventBus {
     this.app.stage.hitArea = this.app.screen;
 
     this.dispatcher = new Dispatcher(this.app.canvas, this.app.stage);
-    this.dispatcher.addHandler(this.camera, this.toolManager);
+    this.dispatcher.addHandler(this.textEditor, this.camera, this.toolManager);
 
     this.emit('editor.initialized');
   };
@@ -69,7 +72,7 @@ export class Editor extends EventBus {
     return this.toolManager.getCurrentToolId();
   };
 
-  getScreen(){
+  getScreen() {
     return this.app.screen;
   }
 

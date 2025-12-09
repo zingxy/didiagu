@@ -27,7 +27,6 @@
 - [ ] Clipboard
 - [ ] Collaboration
 
-
 ## 模块间通信
 
 ## 命名约定
@@ -35,3 +34,12 @@
 - 文件 snake-case
 - 常量全部大写 CONSTANT_VALUE
 - 接口带前缀 I,IInterface
+
+## Text
+
+- TextEditor
+  文本编辑器
+- Text Primitive
+  定义数据模型
+- Text-tool
+  定义交互逻辑
