@@ -41,6 +41,7 @@ export class SceneGraph {
    */
   private readonly primitiveMap: Map<string, AbstractPrimitive> = new Map();
   private editor: Editor;
+  private spatialGraphics = new PIXI.Graphics();
   constructor(editor: Editor, root: PIXI.Container) {
     this.editor = editor;
     this.bus = editor.bus;
@@ -50,6 +51,24 @@ export class SceneGraph {
     this.cameraSpace.addChild(this.scene);
     this.layerManager = new LayerManager(editor, this.scene);
     this.bindEvents();
+    this.addChild('helper', this.spatialGraphics);
+    this.renderSpatialFrame();
+  }
+  renderSpatialFrame() {
+    requestAnimationFrame(() => {
+      this.spatialGraphics.clear();
+      this.spatialIndex.all().forEach((b) => {
+        this.spatialGraphics.beginPath();
+        this.spatialGraphics
+          .moveTo(b.minX, b.minY)
+          .lineTo(b.maxX, b.minY)
+          .lineTo(b.maxX, b.maxY)
+          .lineTo(b.minX, b.maxY)
+          .closePath();
+        this.spatialGraphics.stroke({ width: 2, color: 'red' });
+      });
+      this.renderSpatialFrame();
+    });
   }
   bindEvents() {
     this.bus.on('camera.changed', this.onCameraChanged.bind(this));
@@ -131,6 +150,11 @@ export class SceneGraph {
       if (!layer) {
         throw new Error(`Layer "${layerId}" not found`);
       }
+      children.forEach((child) => {
+        if (!(child instanceof AbstractPrimitive)) return;
+        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
+      });
+      const ret = layer.addChild(...children);
       if (layer.trackable) {
         this.bus.emit(
           'scene.descendantChanged',
@@ -140,11 +164,7 @@ export class SceneGraph {
           this.spatialIndex.track(child as AbstractPrimitive);
         });
       }
-      children.forEach((child) => {
-        if (!(child instanceof AbstractPrimitive)) return;
-        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
-      });
-      return layer.addChild(...children);
+      return ret;
     } else {
       // 第一个参数是父容器
       const parent = args[0] as PIXI.Container;
@@ -153,6 +173,12 @@ export class SceneGraph {
       if (!layer) {
         throw new Error(`Parent container is not inside any layer`);
       }
+      children.forEach((child) => {
+        if (!(child instanceof AbstractPrimitive)) return;
+        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
+      });
+      const ret = parent.addChild(...children);
+
       if (layer.trackable) {
         this.bus.emit(
           'scene.descendantChanged',
@@ -162,11 +188,7 @@ export class SceneGraph {
           this.spatialIndex.track(child as AbstractPrimitive);
         });
       }
-      children.forEach((child) => {
-        if (!(child instanceof AbstractPrimitive)) return;
-        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
-      });
-      return parent.addChild(...children);
+      return ret;
     }
   }
 
