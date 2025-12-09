@@ -39,6 +39,13 @@ export interface IEventHandler {
   onClick?(e: DidiaguPointerEvent): boolean | void;
 
   /**
+   * 处理双击事件
+   * @param e 指针事件
+   * @returns true 表示事件已处理，false 表示传递给下一个处理器
+   */
+  onDblClick?(e: DidiaguPointerEvent): boolean | void;
+
+  /**
    * 处理滚轮事件
    * @param e 滚轮事件
    * @returns true 表示事件已处理，false 表示传递给下一个处理器
@@ -60,8 +67,8 @@ export interface IEventHandler {
   onKeyUp?(e: KeyboardEvent): boolean | void;
 
   /**
-   * 处理右键菜单事件 
-   * @param e 
+   * 处理右键菜单事件
+   * @param e
    */
   onContextMenu?(e: MouseEvent): boolean | void;
 }
@@ -73,6 +80,12 @@ export class Dispatcher {
   private handlers: IEventHandler[] = [];
   private world: PIXI.Container;
   private canvas: HTMLCanvasElement;
+
+  // 双击检测相关
+  private lastClickTime: number = 0;
+  private lastClickPos: { x: number; y: number } = { x: 0, y: 0 };
+  private readonly DOUBLE_CLICK_THRESHOLD = 300; // 毫秒
+  private readonly DOUBLE_CLICK_DISTANCE = 5; // 像素
 
   constructor(canvas: HTMLCanvasElement, world: PIXI.Container) {
     this.canvas = canvas;
@@ -196,9 +209,53 @@ export class Dispatcher {
     return false;
   }
 
+  /**
+   * 分发点击事件，并检测是否为双击
+   */
   dispatchClick(e: DidiaguPointerEvent): boolean {
+    const currentTime = Date.now();
+    const currentPos = { x: e.global.x, y: e.global.y };
+
+    // 检测是否为双击
+    const timeDiff = currentTime - this.lastClickTime;
+    const distance = Math.sqrt(
+      Math.pow(currentPos.x - this.lastClickPos.x, 2) +
+        Math.pow(currentPos.y - this.lastClickPos.y, 2)
+    );
+
+    const isDblClick =
+      timeDiff < this.DOUBLE_CLICK_THRESHOLD &&
+      distance < this.DOUBLE_CLICK_DISTANCE;
+
+    if (isDblClick) {
+      // 分发双击事件
+      this.dispatchDblClick(e);
+      // 重置状态，避免触发三击
+      this.lastClickTime = 0;
+      this.lastClickPos = { x: 0, y: 0 };
+      return true;
+    } else {
+      // 更新最后点击信息
+      this.lastClickTime = currentTime;
+      this.lastClickPos = currentPos;
+
+      // 分发普通点击事件
+      for (const handler of this.handlers) {
+        if (handler.onClick?.(e)) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * 分发双击事件
+   */
+  dispatchDblClick(e: DidiaguPointerEvent): boolean {
     for (const handler of this.handlers) {
-      if (handler.onClick?.(e)) {
+      if (handler.onDblClick?.(e)) {
         return true;
       }
     }
