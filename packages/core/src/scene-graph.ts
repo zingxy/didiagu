@@ -11,6 +11,7 @@ import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
 import { AbstractPrimitive, Layer, LayerConfig } from './primitives';
 import { SpatialIndexManager } from './spatial-index-manager';
+import { Text } from './primitives/shape-text';
 
 export interface SceneGraphEvents {
   /** 场景树节点增加或删除 */
@@ -77,6 +78,25 @@ export class SceneGraph {
     // 应用变换到场景容器, **注意这里是直接设置scene的矩阵**
     this.scene.setFromMatrix(matrix);
     this.viewMatrix = matrix;
+    
+    // 更新所有文字对象的 resolution 以保持清晰度
+    this.updateTextResolution(matrix);
+  }
+  
+  /**
+   * 根据 camera 缩放比例更新所有文字对象的分辨率
+   * @param matrix 相机变换矩阵
+   */
+  private updateTextResolution(matrix: Matrix) {
+    // 从变换矩阵中提取缩放比例
+    const zoomScale = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
+    
+    // 遍历所有图元，更新文字对象的 resolution
+    this.primitiveMap.forEach((primitive) => {
+      if (primitive instanceof Text) {
+        primitive.updateResolution(zoomScale);
+      }
+    });
   }
   /**
    * @description 获取图元在scene坐标系下的bounds
