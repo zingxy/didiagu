@@ -8,6 +8,9 @@ export class Text extends AbstractPrimitive<IText> implements IText {
   text: string = 'helloworld';
   textGraphics = new PIXI.Text();
   label: string = 'Text';
+  fontSize: number = 16;
+  fontFamily: string = 'Arial';
+  fontWeight: PIXI.TextStyle['fontWeight'] = '400';
   constructor(config: ITextConfig) {
     super();
     Object.assign(this, config);
@@ -23,5 +26,9 @@ export class Text extends AbstractPrimitive<IText> implements IText {
     this.graphics.rect(0, 0, this.w, this.h);
     this.applyFillsAndStrokes();
     this.textGraphics.text = this.text;
+    this.textGraphics.style.fontSize = this.fontSize;
+    this.textGraphics.style.fontFamily = this.fontFamily;
+    this.textGraphics.style.fontWeight = this.fontWeight;
+    this.textGraphics.style.fill = 0x000000;
   }
 }

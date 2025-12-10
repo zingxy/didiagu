@@ -13,11 +13,17 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.top = '0';
     this.textArea.style.left = '0';
     this.textArea.style.zIndex = '1000';
-    this.textArea.style.background = 'tranparent';
+    this.textArea.style.background = 'lightblue';
     this.textArea.style.width = '200px';
     this.textArea.style.height = '200px';
     this.textArea.style.resize = 'none';
     this.textArea.style.border = 'none';
+    this.textArea.style.outline = 'none';
+    this.textArea.style.padding = '0';
+    this.textArea.style.margin = '0';
+    this.textArea.style.overflow = 'hidden';
+    this.textArea.style.color = '#000000';
+    this.textArea.style.lineHeight = 'normal';
 
     document.body.appendChild(this.textArea);
   }
@@ -33,6 +39,11 @@ export class TextEditor implements IEventHandler {
     // 设置 textarea 的尺寸匹配 Text 对象
     this.textArea.style.width = `${primitive.w}px`;
     this.textArea.style.height = `auto`;
+
+    // 同步字体样式
+    this.textArea.style.fontSize = `${primitive.fontSize}px`;
+    this.textArea.style.fontFamily = primitive.fontFamily;
+    this.textArea.style.fontWeight = primitive.fontWeight;
 
     // 应用变换，确保变换原点在左上角
     this.textArea.style.transform = `translate(${tx}px, ${ty}px) rotate(${r}rad) skew(${kx}rad, ${ky}rad) scale(${sx}, ${sy})`;

@@ -69,6 +69,9 @@ export interface IPicture extends IBasePrimitive {
 export interface IText extends IBasePrimitive {
   type: 'Text';
   text: string;
+  fontSize: number;
+  fontFamily: string;
+  fontWeight: string;
 }
 
 export type IPrimitive = IEllipse | IRect | IFrame | IPicture;
