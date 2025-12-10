@@ -1,4 +1,3 @@
-import { Transform } from 'pixi.js';
 import { Editor } from '.';
 import { Text } from './primitives/shape-text';
 import { IEventHandler } from './dispatcher';
@@ -31,12 +30,6 @@ export class TextEditor implements IEventHandler {
   }
   activate(primitive: Text) {
     const viewportTransform = primitive.worldTransform;
-    const decomposed = viewportTransform.decompose(new Transform());
-    const { x: tx, y: ty } = decomposed.position;
-    const r = decomposed.rotation;
-    const { x: kx, y: ky } = decomposed.skew;
-    const { x: sx, y: sy } = decomposed.scale;
-
     // 设置 textarea 的尺寸匹配 Text 对象
     this.textArea.style.display = 'block';
     function fitAll(el: HTMLTextAreaElement) {
@@ -55,8 +48,9 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.fontFamily = primitive.fontFamily;
     this.textArea.style.fontWeight = primitive.fontWeight;
 
-    // 应用变换，确保变换原点在左上角
-    this.textArea.style.transform = `translate(${tx}px, ${ty}px) rotate(${r}rad) skew(${kx}rad, ${ky}rad) scale(${sx}, ${sy})`;
+    // 直接使用矩阵变换，避免分解后重组导致的精度问题
+    const m = viewportTransform;
+    this.textArea.style.transform = `matrix(${m.a}, ${m.b}, ${m.c}, ${m.d}, ${m.tx}, ${m.ty})`;
     this.textArea.style.transformOrigin = 'top left';
     this.textArea.value = primitive.text;
     this.textArea.focus();
