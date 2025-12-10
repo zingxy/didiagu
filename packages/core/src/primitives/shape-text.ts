@@ -15,20 +15,22 @@ export class Text extends AbstractPrimitive<IText> implements IText {
     super();
     Object.assign(this, config);
     this.addChild(this.textGraphics);
-    this.fills = [{ type: 'SOLID', color: 'lightblue' }];
-    this.w = 200;
-    this.h = 30;
+    this.fills = [];
     this.render();
   }
 
   render(): void {
-    this.graphics.clear();
-    this.graphics.rect(0, 0, this.w, this.h);
-    this.applyFillsAndStrokes();
     this.textGraphics.text = this.text;
     this.textGraphics.style.fontSize = this.fontSize;
     this.textGraphics.style.fontFamily = this.fontFamily;
     this.textGraphics.style.fontWeight = this.fontWeight;
     this.textGraphics.style.fill = 0x000000;
+    this.textGraphics.style.lineHeight = 1.2 * this.fontSize;
+    // 强制 PixiJS 重新计算文字布局
+    this.textGraphics.updateCacheTexture();
+
+    // 现在获取的宽高是正确的
+    this.w = this.textGraphics.width;
+    this.h = this.textGraphics.height;
   }
 }

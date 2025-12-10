@@ -13,7 +13,6 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.top = '0';
     this.textArea.style.left = '0';
     this.textArea.style.zIndex = '1000';
-    this.textArea.style.background = 'lightblue';
     this.textArea.style.width = '200px';
     this.textArea.style.height = '200px';
     this.textArea.style.resize = 'none';
@@ -23,7 +22,10 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.margin = '0';
     this.textArea.style.overflow = 'hidden';
     this.textArea.style.color = '#000000';
-    this.textArea.style.lineHeight = 'normal';
+    this.textArea.style.background = 'pink';
+    this.textArea.style.opacity = '0.8';
+    this.textArea.style.whiteSpace = 'pre'; // 保留空格和换行，但不自动换行
+    this.textArea.style.lineHeight = '1.2';
 
     document.body.appendChild(this.textArea);
   }
@@ -35,10 +37,18 @@ export class TextEditor implements IEventHandler {
     const { x: kx, y: ky } = decomposed.skew;
     const { x: sx, y: sy } = decomposed.scale;
 
-
     // 设置 textarea 的尺寸匹配 Text 对象
-    this.textArea.style.width = `${primitive.w}px`;
-    this.textArea.style.height = `auto`;
+    this.textArea.style.display = 'block';
+    function fitAll(el: HTMLTextAreaElement) {
+      el.style.height = 'auto';
+      el.style.width = 'auto';
+
+      el.style.height = el.scrollHeight + 'px';
+      el.style.width = el.scrollWidth + 'px';
+    }
+
+    this.textArea.addEventListener('input', () => fitAll(this.textArea));
+    fitAll(this.textArea);
 
     // 同步字体样式
     this.textArea.style.fontSize = `${primitive.fontSize}px`;
@@ -49,6 +59,14 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.transform = `translate(${tx}px, ${ty}px) rotate(${r}rad) skew(${kx}rad, ${ky}rad) scale(${sx}, ${sy})`;
     this.textArea.style.transformOrigin = 'top left';
     this.textArea.value = primitive.text;
+    this.textArea.focus();
+    this.textArea.select();
+    // primitive.visible = false;
+    this.textArea.onblur = () => {
+      primitive.text = this.textArea.value;
+      this.textArea.style.display = 'none';
+      primitive.visible = true;
+    };
   }
 
   destroy() {}
