@@ -12,8 +12,6 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.top = '0';
     this.textArea.style.left = '0';
     this.textArea.style.zIndex = '1000';
-    this.textArea.style.width = '200px';
-    this.textArea.style.height = '200px';
     this.textArea.style.resize = 'none';
     this.textArea.style.border = 'none';
     this.textArea.style.outline = 'none';
@@ -21,7 +19,7 @@ export class TextEditor implements IEventHandler {
     this.textArea.style.margin = '0';
     this.textArea.style.overflow = 'hidden';
     this.textArea.style.color = '#000000';
-    this.textArea.style.background = 'pink';
+    this.textArea.style.background = 'transparent';
     this.textArea.style.opacity = '0.8';
     this.textArea.style.whiteSpace = 'pre'; // 保留空格和换行，但不自动换行
     this.textArea.style.lineHeight = '1.2';
@@ -55,7 +53,6 @@ export class TextEditor implements IEventHandler {
     this.textArea.value = primitive.text;
     this.textArea.focus();
     this.textArea.select();
-    // primitive.visible = false;
     this.textArea.onblur = () => {
       primitive.text = this.textArea.value;
       primitive.updateAttr({
