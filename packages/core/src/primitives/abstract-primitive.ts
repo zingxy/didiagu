@@ -152,7 +152,7 @@ export abstract class AbstractPrimitive<
    * 绘制高亮轮廓。
    */
   drawOutline(graphics: Graphics): void {
-    graphics.beginPath().rect(0, 0, this.w, this.h).stroke(OUTLINE_COLOR);
+    graphics.beginPath().rect(0, 0, this.w, this.h);
   }
   /**
    * 是否是叶子节点

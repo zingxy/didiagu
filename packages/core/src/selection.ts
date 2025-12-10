@@ -103,6 +103,7 @@ export class SelectionManager {
           .append(primitive.worldTransform)
       );
       primitive.drawOutline(this.outlineGraphics);
+      this.outlineGraphics.stroke(OUTLINE_COLOR);
     }
     this.sceneGraph.addChild('helper', this.outlineGraphics);
   }
