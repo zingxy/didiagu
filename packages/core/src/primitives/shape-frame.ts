@@ -12,12 +12,12 @@ export class Frame extends AbstractPrimitive implements IFrame {
     this.maskGraphics = new Graphics();
     this.mask = this.maskGraphics;
     this.addChild(this.maskGraphics);
-    this.render();
+    this.draw();
   }
   override isLeaf(): boolean {
     return false;
   }
-  override render(): void {
+  override draw(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
     this.applyFillsAndStrokes();

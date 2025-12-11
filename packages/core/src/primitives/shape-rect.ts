@@ -8,10 +8,10 @@ export class Rect extends AbstractPrimitive implements IRect {
   constructor(config: IRectConfig) {
     super();
     Object.assign(this, config);
-    this.render();
+    this.draw();
   }
 
-  render(): void {
+  draw(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
     this.applyFillsAndStrokes();

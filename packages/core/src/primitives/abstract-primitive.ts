@@ -112,7 +112,6 @@ export abstract class AbstractPrimitive<
       .lineTo(0, 10)
       .stroke('#00ff00');
   }
-  abstract render(): void;
 
   get scaleX() {
     return this.scale.x;
@@ -145,8 +144,10 @@ export abstract class AbstractPrimitive<
   updateAttr(attr: Partial<Omit<T, 'uuid' | 'type'>>) {
     Object.assign(this, attr);
     this.emit('attr.changed', attr);
-    this.render();
+    this.draw();
   }
+
+  abstract draw(): void;
 
   /**
    * 绘制高亮轮廓。
@@ -180,7 +181,7 @@ export abstract class AbstractPrimitive<
     value: IBasePrimitive[K]
   ): void {
     (this as IBasePrimitive)[key] = value;
-    this.render();
+    this.draw();
   }
   applyFillsAndStrokes(): void {
     this.fills.forEach((fill) => {

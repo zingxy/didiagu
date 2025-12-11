@@ -25,7 +25,7 @@ export class Picture extends AbstractPrimitive<IPicture> implements IPicture {
     const texture = await PIXI.Assets.load(src);
     this.texture = texture;
     this.src = src;
-    this.render();
+    this.draw();
   }
 
   override updateAttr(attr: Partial<Omit<IPicture, 'uuid' | 'type'>>): void {
@@ -35,7 +35,7 @@ export class Picture extends AbstractPrimitive<IPicture> implements IPicture {
     super.updateAttr(attr);
   }
 
-  override render(): void {
+  override draw(): void {
     this.graphics.clear();
     this.graphics.rect(0, 0, this.w, this.h);
     if (this.texture) {

@@ -8,10 +8,10 @@ export class Ellipse extends AbstractPrimitive implements IEllipse {
   constructor(config: IEllipseConfig) {
     super();
     Object.assign(this, config);
-    this.render();
+    this.draw();
   }
 
-  override render(): void {
+  override draw(): void {
     this.graphics.clear();
     this.graphics.ellipse(this.w / 2, this.h / 2, this.w / 2, this.h / 2);
     this.applyFillsAndStrokes();

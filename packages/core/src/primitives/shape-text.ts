@@ -18,10 +18,10 @@ export class Text extends AbstractPrimitive<IText> implements IText {
     Object.assign(this, config);
     this.addChild(this.textGraphics);
     this.fills = [];
-    this.render();
+    this.draw();
   }
 
-  render(): void {
+  draw(): void {
     this.textGraphics.text = this.text;
     this.textGraphics.style.fontSize = this.fontSize;
     this.textGraphics.style.fontFamily = this.fontFamily;
@@ -57,6 +57,6 @@ export class Text extends AbstractPrimitive<IText> implements IText {
       this.textGraphics.resolution = clampedResolution;
       this.textGraphics.updateCacheTexture();
     }
-    this.render();
+    this.draw();
   }
 }

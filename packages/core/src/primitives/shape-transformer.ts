@@ -462,7 +462,7 @@ export class Transformer extends AbstractPrimitive {
     };
   }
 
-  override render(): void {
+  override draw(): void {
     for (const handle of handles) {
       const pos = handle.getPosition(this);
       const handleRect = this.handleMap[handle.handleType];

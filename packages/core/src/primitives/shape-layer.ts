@@ -33,7 +33,7 @@ export class Layer extends AbstractPrimitive {
     this.sortableChildren = true;
     this.trackable = config.trackable ?? true;
   }
-  override render(): void {
+  override draw(): void {
     // 图层不需要渲染
   }
   override isLeaf(): boolean {
