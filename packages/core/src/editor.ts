@@ -21,6 +21,8 @@ interface EditorOptions extends Partial<ApplicationOptions> {
 const defaultEditorOptions: EditorOptions = {
   enableGrid: true,
   antialias: true,
+  autoDensity: true,
+  resolution: window.devicePixelRatio || 1,
 };
 
 export class Editor extends EventBus {
