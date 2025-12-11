@@ -33,7 +33,7 @@ export class SelectTool implements ITool {
       fills: [{ type: 'SOLID', color: 'rgba(51,153,255,0.2)' }],
     });
 
-    this.editor.sceneGraph.addChild('helper', this.selectBox);
+    this.editor.sceneGraph.helperLayer.addChild(this.selectBox);
   }
 
   onActivate() {}

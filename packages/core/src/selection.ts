@@ -31,7 +31,7 @@ export class SelectionManager {
     this.sceneGraph = editor.sceneGraph;
     this.selected = new Set<AbstractPrimitive>();
     this.transformer = new Transformer(editor)
-    this.sceneGraph.addChild('helper', this.transformer);
+    this.sceneGraph.helperLayer.addChild(this.transformer);
   }
   select(primitives: AbstractPrimitive[]) {
     for (const primitive of primitives) {
@@ -102,7 +102,7 @@ export class SelectionManager {
       primitive.drawOutline(this.outlineGraphics);
       this.outlineGraphics.stroke(OUTLINE_COLOR);
     }
-    this.sceneGraph.addChild('helper', this.outlineGraphics);
+    this.sceneGraph.helperLayer.addChild(this.outlineGraphics);
   }
   updateTransformer() {
     this.transformer.update(Array.from(this.selected));

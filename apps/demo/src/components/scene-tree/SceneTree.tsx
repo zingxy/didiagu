@@ -77,24 +77,21 @@ export default function SceneTree() {
   }, [editor]);
 
   const expandKeys = ['root'];
-  const data = editor?.sceneGraph.map<TreeDataNode>(
-    editor.sceneGraph.getDefaultLayer(),
-    (node) => {
-      expandKeys.push(node.uuid);
-      return {
-        icon: SHAPE_MAP[node.type].icon,
-        key: node.uuid,
-        title: node.type,
-        isLeaf: node.isLeaf(),
-        // children: [], // 会被 map 方法自动填充
-      };
-    }
-  );
+  const data = editor?.sceneGraph.mapDoc<TreeDataNode>((node) => {
+    expandKeys.push(node.uuid);
+    return {
+      icon: SHAPE_MAP[node.type].icon,
+      key: node.uuid,
+      title: node.type,
+      isLeaf: node.isLeaf(),
+      // children: [], // 会被 map 方法自动填充
+    };
+  });
 
   const root: TreeDataNode = {
     key: 'root',
     title: 'root',
-    children: data ? data.children : [],
+    children: data ? data : [],
   };
 
   return (

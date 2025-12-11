@@ -31,8 +31,7 @@ export class SceneGraph {
   /**
    * @description **逻辑**世界空间，区别于pixijs的world
    */
-  private readonly scene: PIXI.Container<Layer>;
-  private readonly layerManager: LayerManager;
+  private readonly scene: PIXI.Container;
   /**
    * @description 空间索引
    */
@@ -43,6 +42,10 @@ export class SceneGraph {
   private readonly primitiveMap: Map<string, AbstractPrimitive> = new Map();
   private editor: Editor;
   private spatialGraphics = new PIXI.Graphics();
+  /**图形层 */
+  public doc: PIXI.Container<AbstractPrimitive>;
+  /**辅助层 */
+  public helperLayer: PIXI.Container;
   constructor(editor: Editor, root: PIXI.Container) {
     this.editor = editor;
     this.bus = editor.bus;
@@ -50,9 +53,14 @@ export class SceneGraph {
     // 创建独立的场景容器，用于应用 camera 变换
     this.scene = new PIXI.Container();
     this.cameraSpace.addChild(this.scene);
-    this.layerManager = new LayerManager(editor, this.scene);
+
+    this.doc = new PIXI.Container();
+    this.helperLayer = new PIXI.Container();
+    this.scene.addChild(this.doc);
+    this.scene.addChild(this.helperLayer);
+    this.helperLayer.addChild(this.spatialGraphics);
+
     this.bindEvents();
-    this.addChild('helper', this.spatialGraphics);
     this.renderSpatialFrame();
   }
   renderSpatialFrame() {
@@ -78,11 +86,11 @@ export class SceneGraph {
     // 应用变换到场景容器, **注意这里是直接设置scene的矩阵**
     this.scene.setFromMatrix(matrix);
     this.viewMatrix = matrix;
-    
+
     // 更新所有文字对象的 resolution 以保持清晰度
     this.updateTextResolution(matrix);
   }
-  
+
   /**
    * 根据 camera 缩放比例更新所有文字对象的分辨率
    * @param matrix 相机变换矩阵
@@ -90,7 +98,7 @@ export class SceneGraph {
   private updateTextResolution(matrix: Matrix) {
     // 从变换矩阵中提取缩放比例
     const zoomScale = Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b);
-    
+
     // 遍历所有图元，更新文字对象的 resolution
     this.primitiveMap.forEach((primitive) => {
       if (primitive instanceof Text) {
@@ -154,81 +162,6 @@ export class SceneGraph {
   getPrimiveById(id: string): AbstractPrimitive | undefined {
     return this.primitiveMap.get(id);
   }
-
-  /**
-   * 所有节点都应该添加到对应的图层中，或者图层的后代中
-   */
-  /** 添加子节点到默认图层 */
-  addChild(layerId: 'default', ...children: PIXI.Container[]): PIXI.Container;
-  /** 添加子节点到辅助图层 */
-  addChild(layerId: 'helper', ...children: PIXI.Container[]): PIXI.Container;
-  /** 添加子节点到指定图层 */
-  addChild(layerId: string, ...children: PIXI.Container[]): PIXI.Container;
-  /** 添加子节点到指定父容器 */
-  addChild(parent: PIXI.Container, children: PIXI.Container[]): PIXI.Container;
-  addChild(...args: unknown[]): PIXI.Container {
-    if (typeof args[0] === 'string') {
-      // 第一个参数是 layerId
-      const layerId = args[0] as string;
-      const children = args.slice(1) as PIXI.Container[];
-      const layer = this.layerManager.getLayer(layerId);
-      if (!layer) {
-        throw new Error(`Layer "${layerId}" not found`);
-      }
-      children.forEach((child) => {
-        if (!(child instanceof AbstractPrimitive)) return;
-        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
-      });
-      const ret = layer.addChild(...children);
-      if (layer.trackable) {
-        this.bus.emit(
-          'scene.descendantChanged',
-          children as AbstractPrimitive[]
-        );
-        children.forEach((child) => {
-          this.spatialIndex.track(child as AbstractPrimitive);
-        });
-      }
-      return ret;
-    } else {
-      // 第一个参数是父容器
-      const parent = args[0] as PIXI.Container;
-      const children = args[1] as PIXI.Container[];
-      const layer = this.layerManager.findParentLayer(parent);
-      if (!layer) {
-        throw new Error(`Parent container is not inside any layer`);
-      }
-      children.forEach((child) => {
-        if (!(child instanceof AbstractPrimitive)) return;
-        this.primitiveMap.set(child.uuid, child as AbstractPrimitive);
-      });
-      const ret = parent.addChild(...children);
-
-      if (layer.trackable) {
-        this.bus.emit(
-          'scene.descendantChanged',
-          children as AbstractPrimitive[]
-        );
-        children.forEach((child) => {
-          this.spatialIndex.track(child as AbstractPrimitive);
-        });
-      }
-      return ret;
-    }
-  }
-
-  removeChildren = (...children: AbstractPrimitive[]) => {
-    const removedChildren = [];
-    for (const child of children) {
-      const layer = this.layerManager.findParentLayer(child);
-      if (layer && layer.trackable) {
-        removedChildren.push(child);
-      }
-      this.primitiveMap.delete(child.uuid);
-      child.parent?.removeChild(child);
-    }
-    this.bus.emit('scene.descendantChanged', removedChildren);
-  };
   /**
    * @description 转换到场景坐标系
    * @param args
@@ -237,9 +170,6 @@ export class SceneGraph {
   toLocal: PIXI.Container['toLocal'] = (...args) => {
     return this.scene.toLocal(...args);
   };
-  getDefaultLayer(): Layer {
-    return this.layerManager.getLayer('default')!;
-  }
   traverse(
     root: AbstractPrimitive,
     callback: (node: AbstractPrimitive) => void
@@ -279,229 +209,16 @@ export class SceneGraph {
     newRoot.children = children;
     return newRoot;
   }
-}
-
-export interface LayerManagerEvents {
-  /** 图层添加 */
-  'layer.added': (layer: Layer) => void;
-  /** 图层删除 */
-  'layer.removed': (layer: Layer) => void;
-  /** 图层属性变更 */
-  'layer.changed': (layer: Layer) => void;
-  /** 图层顺序变更 */
-  'layer.reordered': (layers: Layer[]) => void;
-  /** 当前激活图层变更 */
-  'layer.activeChanged': (layer: Layer | null) => void;
-}
-
-export class LayerManager {
-  private bus: Editor['bus'];
-  private layers: Map<string, Layer> = new Map();
-  private activeLayer: Layer | null = null;
-  private root: PIXI.Container;
-
-  constructor(editor: Editor, root: PIXI.Container) {
-    this.bus = editor.bus;
-    this.root = root;
-    this.root.sortableChildren = true;
-
-    // 创建默认图层
-    this.createLayer({
-      id: 'default',
-      name: '默认图层',
-      zIndex: 0,
-      trackable: true,
-    });
-    // 创建辅助图层，辅助线、高亮框框等不需要记录历史的元素放在这里
-    this.createLayer({
-      id: 'helper',
-      name: '辅助图层',
-      zIndex: 9999,
-      trackable: false,
+  mapDoc<T extends { children?: T[] }>(
+    callback: (node: AbstractPrimitive) => T
+  ): T[] {
+    return this.doc.children.map((child) => {
+      return this.map(child, callback);
     });
   }
-
-  /**
-   * 创建新图层
-   */
-  createLayer(config: LayerConfig): Layer {
-    if (this.layers.has(config.id)) {
-      throw new Error(`Layer with id "${config.id}" already exists`);
-    }
-
-    const layer = new Layer(config);
-    this.layers.set(config.id, layer);
-    this.root.addChild(layer);
-
-    // 如果是第一个图层，设为激活图层
-    if (!this.activeLayer) {
-      this.setActiveLayer(layer.id);
-    }
-
-    this.bus.emit('layer.added', layer);
-    return layer;
-  }
-  findParentLayer(container: PIXI.Container): Layer | null {
-    let current: PIXI.Container | null = container;
-    while (current) {
-      for (const layer of this.layers.values()) {
-        if (layer === current) {
-          return layer;
-        }
-      }
-      current = current.parent;
-    }
-    return null;
-  }
-
-  /**
-   * 删除图层
-   */
-  removeLayer(id: string): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    // 不允许删除默认图层
-    if (id === 'default') {
-      throw new Error('Cannot remove default layer');
-    }
-
-    // 如果删除的是激活图层，切换到默认图层
-    if (this.activeLayer?.id === id) {
-      this.setActiveLayer('default');
-    }
-
-    this.root.removeChild(layer);
-    this.layers.delete(id);
-    this.bus.emit('layer.removed', layer);
-
-    return true;
-  }
-
-  /**
-   * 获取图层
-   */
-  getLayer(id: string, fallback = false): Layer | undefined {
-    const layer = this.layers.get(id);
-    if (!layer && fallback) {
-      return this.layers.get('default');
-    }
-    return layer;
-  }
-
-  /**
-   * 获取所有图层（按 zIndex 排序）
-   */
-  getLayers(): Layer[] {
-    return Array.from(this.layers.values()).sort((a, b) => a.zIndex - b.zIndex);
-  }
-
-  /**
-   * 设置激活图层
-   */
-  setActiveLayer(id: string): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    this.activeLayer = layer;
-    this.bus.emit('layer.activeChanged', layer);
-    return true;
-  }
-
-  /**
-   * 获取激活图层
-   */
-  getActiveLayer(): Layer | null {
-    return this.activeLayer;
-  }
-
-  /**
-   * 更新图层属性
-   */
-  updateLayer(id: string, config: Partial<Omit<LayerConfig, 'id'>>): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    if (config.name !== undefined) layer.name = config.name;
-    if (config.visible !== undefined) layer.visible = config.visible;
-    if (config.locked !== undefined) layer.locked = config.locked;
-    if (config.zIndex !== undefined) {
-      layer.zIndex = config.zIndex;
-      this.root.sortChildren();
-      this.bus.emit('layer.reordered', this.getLayers());
-    }
-
-    this.bus.emit('layer.changed', layer);
-    return true;
-  }
-
-  /**
-   * 添加元素到激活图层
-   */
-  addToActiveLayer(...children: PIXI.Container[]): boolean {
-    if (!this.activeLayer) return false;
-    this.activeLayer.addChild(...children);
-    return true;
-  }
-
-  /**
-   * 移动图层顺序
-   */
-  moveLayer(id: string, targetZIndex: number): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    layer.zIndex = targetZIndex;
-    this.root.sortChildren();
-    this.bus.emit('layer.reordered', this.getLayers());
-    return true;
-  }
-
-  /**
-   * 显示/隐藏图层
-   */
-  toggleLayerVisibility(id: string): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    layer.visible = !layer.visible;
-    this.bus.emit('layer.changed', layer);
-    return true;
-  }
-
-  /**
-   * 锁定/解锁图层
-   */
-  toggleLayerLock(id: string): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    layer.locked = !layer.locked;
-    this.bus.emit('layer.changed', layer);
-    return true;
-  }
-
-  /**
-   * 清空图层内容
-   */
-  clearLayer(id: string): boolean {
-    const layer = this.layers.get(id);
-    if (!layer) return false;
-
-    layer.removeChildren();
-    this.bus.emit('layer.changed', layer);
-    return true;
-  }
-
-  /**
-   * 销毁所有图层
-   */
-  destroy(): void {
-    this.layers.forEach((layer) => {
-      this.root.removeChild(layer);
-      layer.destroy({ children: true });
+  trverseDoc(callback: (node: AbstractPrimitive) => void): void {
+    this.doc.children.forEach((child) => {
+      this.traverse(child, callback);
     });
-    this.layers.clear();
-    this.activeLayer = null;
   }
 }

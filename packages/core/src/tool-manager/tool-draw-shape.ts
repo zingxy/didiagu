@@ -27,7 +27,7 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.last = { x: e.global.x, y: e.global.y };
     this.drawingShape = this.createShape();
     this.counter++;
-    this.editor.sceneGraph.addChild('default', this.drawingShape);
+    this.editor.sceneGraph.doc.addChild(this.drawingShape);
     this.editor.selectionManager.selectOnly(this.drawingShape);
     const stage = this.editor.sceneGraph;
     const localPos = stage.toLocal({ x: this.last.x, y: this.last.y });
