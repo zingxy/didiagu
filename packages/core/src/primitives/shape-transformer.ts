@@ -519,11 +519,20 @@ export class Transformer extends AbstractPrimitive {
         .append(delta)
         .append(invertTransformerParentTransform)
         .append(primitiveParentTransform);
-
-      primitive.setFromMatrix(localDelta.append(primitive.localTransform));
-      // BUG 为什么需要调用 updateLocalTransform？
-      primitive.updateLocalTransform();
-      primitive.updateAttr({}); // 触发重绘
+      // 为什么要分离出scale? scale会影响stroke的宽度，导致变形
+      const newMatrix = localDelta.append(primitive.localTransform);
+      const { x, y, rotation, skewX, skewY, scaleX, scaleY } =
+        decompose(newMatrix);
+      primitive.x = x;
+      primitive.y = y;
+      primitive.rotation = rotation;
+      primitive.skew.x = skewX;
+      primitive.skew.y = skewY;
+      primitive.scale.set(1, 1);
+      primitive.updateAttr({
+        w: primitive.w * scaleX,
+        h: primitive.h * scaleY,
+      }); // 触发重绘
     });
   };
 
