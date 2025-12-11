@@ -17,12 +17,11 @@ export const OUTLINE_COLOR = '#1890ff';
 
 export type PrimitiveType = (typeof PrmitiveMap)[keyof typeof PrmitiveMap];
 
-
-export interface IGeometry{
+export interface IGeometry {
   w: number;
   h: number;
 }
-export interface ITransform{
+export interface ITransform {
   x: number;
   y: number;
   rotation: number;
@@ -32,7 +31,7 @@ export interface ITransform{
   scaleY: number;
 }
 
-export interface IStyle{
+export interface IStyle {
   fills: IPaint[];
   strokes: IPaint[];
 }
@@ -89,32 +88,7 @@ export abstract class AbstractPrimitive<
   h = 0;
   fills: IPaint[] = [];
   strokes: IPaint[] = [];
-  strokeWidth: number = 1;
-  /**
-   * 是否可选中
-   */
   selectable = true;
-
-  /**
-   * Pixi 原生属性，会自动触发脏标记
-   */
-  private static readonly PIXI_NATIVE_PROPS = new Set([
-    'x',
-    'y',
-    'position',
-    'rotation',
-    'angle',
-    'scaleX',
-    'scaleY',
-    'scale',
-    'skewX',
-    'skewY',
-    'skew',
-    'alpha',
-    'visible',
-    'pivot',
-    'anchor',
-  ]);
 
   /**
    * 需要重新绘制的自定义属性
@@ -124,8 +98,6 @@ export abstract class AbstractPrimitive<
     'h',
     'fills',
     'strokes',
-    'strokeWidth',
-    'r', // Rect 的圆角
     'text',
     'fontSize',
     'fontFamily',
@@ -271,7 +243,10 @@ export abstract class AbstractPrimitive<
     });
     this.strokes.forEach((stroke) => {
       if (stroke.type === 'SOLID' && stroke.strokeWidth !== undefined) {
-        this.graphics.stroke({ color: stroke.color, width:  stroke.strokeWidth});
+        this.graphics.stroke({
+          color: stroke.color,
+          width: stroke.strokeWidth,
+        });
       }
     });
   }
