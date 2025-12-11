@@ -55,7 +55,7 @@ export class TextEditor implements IEventHandler {
     this.textArea.select();
     this.textArea.onblur = () => {
       primitive.text = this.textArea.value;
-      primitive.updateAttr({
+      primitive.updateAttrs({
         text: this.textArea.value,
       });
       this.textArea.style.display = 'none';

@@ -28,11 +28,11 @@ export class Picture extends AbstractPrimitive<IPicture> implements IPicture {
     this.draw();
   }
 
-  override updateAttr(attr: Partial<Omit<IPicture, 'uuid' | 'type'>>): void {
+  override updateAttrs(attr: Partial<Omit<IPicture, 'uuid' | 'type'>>): void {
     if (attr.src !== undefined) {
       this.loadTexture(attr.src);
     }
-    super.updateAttr(attr);
+    super.updateAttrs(attr);
   }
 
   override draw(): void {

@@ -141,12 +141,14 @@ export abstract class AbstractPrimitive<
     this.skew.y = value;
   }
 
-  updateAttr(attr: Partial<Omit<T, 'uuid' | 'type'>>) {
-    Object.assign(this, attr);
-    this.emit('attr.changed', attr);
+  updateAttrs(attrs: Partial<Omit<T, 'uuid' | 'type'>>) {
+    Object.assign(this, attrs);
+    this.emit('attr.changed', attrs);
     this.draw();
   }
-
+  /**
+   * only draw shape path
+   */
   abstract draw(): void;
 
   /**

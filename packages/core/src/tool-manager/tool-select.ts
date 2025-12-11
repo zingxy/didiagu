@@ -43,7 +43,7 @@ export class SelectTool implements ITool {
   /**框选逻辑 */
   onPointerDown(e: DidiaguPointerEvent): boolean | void {
     const stagePos = this.editor.sceneGraph.toLocal(e.global);
-    this.selectBox.updateAttr({
+    this.selectBox.updateAttrs({
       x: stagePos.x,
       y: stagePos.y,
       w: 0,
@@ -65,7 +65,7 @@ export class SelectTool implements ITool {
     const rectY = Math.min(startY, currentY);
     const rectW = Math.abs(currentX - startX);
     const rectH = Math.abs(currentY - startY);
-    this.selectBox.updateAttr({
+    this.selectBox.updateAttrs({
       x: rectX,
       y: rectY,
       w: rectW,
@@ -87,6 +87,6 @@ export class SelectTool implements ITool {
     this.editor.selectionManager.deselectAll();
     this.editor.selectionManager.select(primitives);
     this.pressed = false;
-    this.selectBox.updateAttr({ w: 0, h: 0 });
+    this.selectBox.updateAttrs({ w: 0, h: 0 });
   }
 }

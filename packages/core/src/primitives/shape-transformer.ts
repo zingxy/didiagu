@@ -364,14 +364,14 @@ export class Transformer extends AbstractPrimitive {
       const topLeft = r.apply({ x: minX, y: minY });
       this.setFromMatrix(new Matrix());
       this.updateLocalTransform();
-      this.updateAttr({
+      this.updateAttrs({
         x: topLeft.x,
         y: topLeft.y,
         w: width,
         h: height,
         rotation: rotation,
       });
-      this.overlay.updateAttr({
+      this.overlay.updateAttrs({
         w: width,
         h: height,
       });
@@ -396,13 +396,13 @@ export class Transformer extends AbstractPrimitive {
       const h = maxY - minY;
       this.setFromMatrix(new Matrix());
       this.updateLocalTransform();
-      this.updateAttr({
+      this.updateAttrs({
         x,
         y,
         w,
         h,
       });
-      this.overlay.updateAttr({
+      this.overlay.updateAttrs({
         w,
         h,
       });
@@ -466,7 +466,7 @@ export class Transformer extends AbstractPrimitive {
     for (const handle of handles) {
       const pos = handle.getPosition(this);
       const handleRect = this.handleMap[handle.handleType];
-      handleRect.updateAttr({
+      handleRect.updateAttrs({
         x: pos.x,
         y: pos.y,
       });
@@ -529,7 +529,7 @@ export class Transformer extends AbstractPrimitive {
       primitive.skew.x = skewX;
       primitive.skew.y = skewY;
       primitive.scale.set(1, 1);
-      primitive.updateAttr({
+      primitive.updateAttrs({
         w: primitive.w * scaleX,
         h: primitive.h * scaleY,
       }); // 触发重绘

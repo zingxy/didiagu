@@ -31,7 +31,7 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.editor.selectionManager.selectOnly(this.drawingShape);
     const stage = this.editor.sceneGraph;
     const localPos = stage.toLocal({ x: this.last.x, y: this.last.y });
-    this.drawingShape.updateAttr({
+    this.drawingShape.updateAttrs({
       x: localPos.x,
       y: localPos.y,
       w: 0,
@@ -85,7 +85,7 @@ abstract class AbstractDrawShapeTool implements ITool {
       }
     }
 
-    this.drawingShape.updateAttr({
+    this.drawingShape.updateAttrs({
       x: w >= 0 ? startLocal.x : startLocal.x + w,
       y: h >= 0 ? startLocal.y : startLocal.y + h,
       w: Math.abs(w),
@@ -107,7 +107,7 @@ abstract class AbstractDrawShapeTool implements ITool {
 
     // 如果用户只是点击（没有拖拽），设置默认宽高为 100 * 100
     if (!this.dragging) {
-      this.drawingShape.updateAttr({
+      this.drawingShape.updateAttrs({
         w: 100,
         h: 100,
       });
