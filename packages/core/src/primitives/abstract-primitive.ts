@@ -95,6 +95,48 @@ export abstract class AbstractPrimitive<
    * 是否可选中
    */
   selectable = true;
+
+  /**
+   * Pixi 原生属性，会自动触发脏标记
+   */
+  private static readonly PIXI_NATIVE_PROPS = new Set([
+    'x',
+    'y',
+    'position',
+    'rotation',
+    'angle',
+    'scaleX',
+    'scaleY',
+    'scale',
+    'skewX',
+    'skewY',
+    'skew',
+    'alpha',
+    'visible',
+    'pivot',
+    'anchor',
+  ]);
+
+  /**
+   * 需要重新绘制的自定义属性
+   */
+  private static readonly CUSTOM_GEOMETRY_PROPS = new Set([
+    'w',
+    'h',
+    'fills',
+    'strokes',
+    'strokeWidth',
+    'r', // Rect 的圆角
+    'text',
+    'fontSize',
+    'fontFamily',
+    'fontWeight', // Text 属性
+    'src',
+    'scaleMode', // Picture 属性
+  ]);
+
+  private _drawScheduled = false;
+
   constructor() {
     super();
     this.uuid = nanoid();
@@ -141,15 +183,48 @@ export abstract class AbstractPrimitive<
     this.skew.y = value;
   }
 
+  /**
+   * 检查属性是否需要重新绘制
+   */
+  private needsRedraw(attrs: Partial<Omit<T, 'uuid' | 'type'>>): boolean {
+    return Object.keys(attrs).some((key) =>
+      AbstractPrimitive.CUSTOM_GEOMETRY_PROPS.has(key)
+    );
+  }
+
+  /**
+   * 调度绘制（防止同一帧内重复绘制）
+   */
+  private scheduleDraw(): void {
+    if (this._drawScheduled) return;
+
+    this._drawScheduled = true;
+    requestAnimationFrame(() => {
+      this.draw();
+      this._drawScheduled = false;
+    });
+  }
+
+  /**
+   * 更新属性
+   * - Pixi 原生属性：自动触发 Pixi 的脏标记
+   * - 自定义几何属性：需要重新绘制 Graphics
+   */
   updateAttrs(attrs: Partial<Omit<T, 'uuid' | 'type'>>) {
     Object.assign(this, attrs);
     this.emit('attr.changed', attrs);
-    this.draw();
+
+    // 只有自定义属性变化时才需要重新绘制
+    if (this.needsRedraw(attrs)) {
+      this.scheduleDraw();
+    }
+    // Pixi 原生属性（如 x, y, rotation）会自动处理脏标记，无需手动绘制
   }
+
   /**
-   * only draw shape path
+   * @description 绘制图形路径, 不应该被外部调用
    */
-  abstract draw(): void;
+  protected abstract draw(): void;
 
   /**
    * 绘制高亮轮廓。
@@ -183,7 +258,11 @@ export abstract class AbstractPrimitive<
     value: IBasePrimitive[K]
   ): void {
     (this as IBasePrimitive)[key] = value;
-    this.draw();
+
+    // 检查是否需要重绘
+    if (AbstractPrimitive.CUSTOM_GEOMETRY_PROPS.has(key as string)) {
+      this.scheduleDraw();
+    }
   }
   applyFillsAndStrokes(): void {
     this.fills.forEach((fill) => {
