@@ -89,11 +89,11 @@ export const BASE_INSPECTOR_SCHEMA: InspectorSchema = {
         properties: {
           type: { type: 'string', enum: ['SOLID'], default: 'SOLID' },
           color: { type: 'color', title: 'Color', default: '#000000' },
+          strokeWidth: { type: 'number', title: 'Stroke Width' },
         },
       },
       maxItems: 5,
     },
-    strokeWidth: { type: 'number', title: 'Stroke Width', minimum: 0 },
   },
   groups: [
     { title: 'Transform', properties: ['x', 'y', 'rotation'] },

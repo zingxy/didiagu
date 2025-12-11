@@ -19,7 +19,7 @@ export class DrawEllipseTool extends AbstractDrawShapeTool {
 
   override createShape() {
     return new Ellipse({
-      strokes: [{ type: 'SOLID', color: '#000000' }],
+      strokes: [{ type: 'SOLID', color: '#000000', strokeWidth: 1 }],
     });
   }
 

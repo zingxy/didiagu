@@ -17,40 +17,39 @@ export const OUTLINE_COLOR = '#1890ff';
 
 export type PrimitiveType = (typeof PrmitiveMap)[keyof typeof PrmitiveMap];
 
-export interface IBasePrimitive {
+
+export interface IGeometry{
+  w: number;
+  h: number;
+}
+export interface ITransform{
+  x: number;
+  y: number;
+  rotation: number;
+  skewX: number;
+  skewY: number;
+  scaleX: number;
+  scaleY: number;
+}
+
+export interface IStyle{
+  fills: IPaint[];
+  strokes: IPaint[];
+}
+
+export interface IBasePrimitive extends IGeometry, ITransform, IStyle {
   // uuid, 对象的唯一id
   readonly uuid: string;
   // 节点类型
   readonly type: PrimitiveType;
   // 名称
   label: string;
-  // 初始尺寸
-  w: number;
-  h: number;
-
-  // T
-  x: number;
-  y: number;
-  // R
-  rotation: number;
-  // K
-  skewX: number;
-  skewY: number;
-  // S
-  scaleX: number;
-  scaleY: number;
-  // fill
-  fills: IPaint[];
-  // stroke
-  strokes: IPaint[];
-  strokeWidth: number;
   // 是否可选中
   selectable: boolean;
 }
 
 export interface IRect extends IBasePrimitive {
   type: 'Rect';
-  r: number;
 }
 
 export interface IEllipse extends IBasePrimitive {
@@ -271,8 +270,8 @@ export abstract class AbstractPrimitive<
       }
     });
     this.strokes.forEach((stroke) => {
-      if (stroke.type === 'SOLID') {
-        this.graphics.stroke({ color: stroke.color, width: this.strokeWidth });
+      if (stroke.type === 'SOLID' && stroke.strokeWidth !== undefined) {
+        this.graphics.stroke({ color: stroke.color, width:  stroke.strokeWidth});
       }
     });
   }
