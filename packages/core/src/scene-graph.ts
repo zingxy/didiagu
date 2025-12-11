@@ -106,6 +106,11 @@ export class SceneGraph {
   getSceneBounds(primitive: AbstractPrimitive): PIXI.Bounds {
     return this.pixiWorldBoundsToSceneBounds(primitive.getBounds());
   }
+  getSceneTransform(primitive: AbstractPrimitive): Matrix {
+    const worldTransform = primitive.worldTransform;
+    const sceneMatrix = this.viewMatrix.clone().invert().append(worldTransform);
+    return sceneMatrix;
+  }
 
   /**
    * @param worldbounds pixi.getBounds() 获取到的bounds

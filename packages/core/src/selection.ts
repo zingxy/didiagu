@@ -97,10 +97,7 @@ export class SelectionManager {
     for (const primitive of this.selected) {
       this.outlineGraphics.resetTransform();
       this.outlineGraphics.transform(
-        this.editor.camera.transform
-          .clone()
-          .invert()
-          .append(primitive.worldTransform)
+        this.editor.sceneGraph.getSceneTransform(primitive)
       );
       primitive.drawOutline(this.outlineGraphics);
       this.outlineGraphics.stroke(OUTLINE_COLOR);
