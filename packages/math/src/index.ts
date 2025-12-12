@@ -1,4 +1,5 @@
 import { Matrix } from 'pixi.js';
+import * as PIXI from 'pixi.js';
 
 /**
  * 参考Konvajs的实现
@@ -40,5 +41,14 @@ export function decompose(matrix: Matrix) {
     // a = b = c = d = 0
   }
   return result;
+}
+
+export function isIntersect(bound1: PIXI.Bounds, bound2: PIXI.Bounds): boolean {
+  return !(
+    bound2.left > bound1.right ||
+    bound2.right < bound1.left ||
+    bound2.top > bound1.bottom ||
+    bound2.bottom < bound1.top
+  );
 }
 export { Matrix };

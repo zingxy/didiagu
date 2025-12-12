@@ -6,7 +6,7 @@
  * @version 1.0.0
  */
 
-import { Matrix } from '@didiagu/math';
+import { isIntersect, Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
 import { AbstractPrimitive } from './primitives';
@@ -41,7 +41,6 @@ export class SceneGraph {
    */
   private readonly primitiveMap: Map<string, AbstractPrimitive> = new Map();
   private editor: Editor;
-  private spatialGraphics = new PIXI.Graphics();
   /**图形层 */
   public doc: PIXI.Container<AbstractPrimitive>;
   /**辅助层 */
@@ -58,26 +57,7 @@ export class SceneGraph {
     this.helperLayer = new PIXI.Container();
     this.scene.addChild(this.doc);
     this.scene.addChild(this.helperLayer);
-    this.helperLayer.addChild(this.spatialGraphics);
-
     this.bindEvents();
-    this.renderSpatialFrame();
-  }
-  renderSpatialFrame() {
-    requestAnimationFrame(() => {
-      this.spatialGraphics.clear();
-      this.spatialIndex.all().forEach((b) => {
-        this.spatialGraphics.beginPath();
-        this.spatialGraphics
-          .moveTo(b.minX, b.minY)
-          .lineTo(b.maxX, b.minY)
-          .lineTo(b.maxX, b.maxY)
-          .lineTo(b.minX, b.maxY)
-          .closePath();
-        this.spatialGraphics.stroke({ width: 2, color: 'red' });
-      });
-      this.renderSpatialFrame();
-    });
   }
   bindEvents() {
     this.bus.on('camera.changed', this.onCameraChanged.bind(this));
@@ -150,14 +130,18 @@ export class SceneGraph {
    */
   getPrimitivesInViewport(): AbstractPrimitive[] {
     const viewportBounds = this.getViewportBoundsInScene();
-    const bounds = this.spatialIndex.search(viewportBounds);
-    const primitives = bounds.map((b) => b.ref);
-    return primitives;
+    return this.getPrimiveByBounds(viewportBounds);
   }
 
   getPrimiveByBounds(bounds: PIXI.Bounds): AbstractPrimitive[] {
-    const indexedBounds = this.spatialIndex.search(bounds);
-    return indexedBounds.map((b) => b.ref);
+    const primitives: AbstractPrimitive[] = [];
+    this.trverseDoc((node) => {
+      const nodeBounds = this.getSceneBounds(node);
+      if (isIntersect(bounds, nodeBounds)) {
+        primitives.push(node);
+      }
+    });
+    return primitives;
   }
   getPrimiveById(id: string): AbstractPrimitive | undefined {
     return this.primitiveMap.get(id);
