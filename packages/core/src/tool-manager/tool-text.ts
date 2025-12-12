@@ -33,7 +33,7 @@ export class TextTool implements ITool {
     const stagePose = this.editor.sceneGraph.toLocal(e.global);
     const text = new Text({ x: stagePose.x, y: stagePose.y });
     // FIXME
-    this.editor.sceneGraph.addChild('default', text);
+    this.editor.sceneGraph.doc.addChild(text);
     this.editor.selectionManager.selectOnly(text);
     this.editor.textEditor.activate(text);
     this.editor.setCurrentTool('SELECT');
