@@ -146,6 +146,56 @@ export class SceneGraph {
   getPrimiveById(id: string): AbstractPrimitive | undefined {
     return this.primitiveMap.get(id);
   }
+  getPathFromRoot(primitive: AbstractPrimitive): AbstractPrimitive[] {
+    const path: AbstractPrimitive[] = [];
+    let current: AbstractPrimitive | null = primitive;
+    while (current) {
+      path.unshift(current);
+      current = current.parent as AbstractPrimitive | null;
+    }
+    return path;
+  }
+  /**
+   *
+   * @param point 世界坐标
+   * @returns
+   */
+  getTopMostPrimitiveAtPoint(point: {
+    x: number;
+    y: number;
+  }): AbstractPrimitive | null {
+    const primitivesInViewport = this.getPrimitivesInViewport();
+    primitivesInViewport.sort((a, b) => this.compareZIndex(a, b));
+    for (let i = primitivesInViewport.length - 1; i >= 0; i--) {
+      const primitive = primitivesInViewport[i];
+      const localPoint = this.toLocal(point, undefined, primitive);
+      if (primitive.graphics.containsPoint(localPoint)) {
+        return primitive;
+      }
+    }
+    return null;
+  }
+  /**
+   * @description 比较两个图元的zIndex
+   * @param a 图元a
+   * @param b 图元b
+   * @returns 正数表示a在b上方，负数表示a在b下方，0表示相等
+   */
+  compareZIndex(a: AbstractPrimitive, b: AbstractPrimitive): number {
+    const aPath = this.getPathFromRoot(a);
+    const bPath = this.getPathFromRoot(b);
+    const minLength = Math.min(aPath.length, bPath.length);
+    for (let i = 0; i < minLength; i++) {
+      if (aPath[i] !== bPath[i]) {
+        return (
+          aPath[i].parent!.getChildIndex(aPath[i])! -
+          bPath[i].parent!.getChildIndex(bPath[i])!
+        );
+      }
+    }
+    return aPath.length - bPath.length;
+  }
+
   /**
    * @description 转换到场景坐标系
    * @param args
