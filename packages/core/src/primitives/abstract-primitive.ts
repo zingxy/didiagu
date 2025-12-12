@@ -17,7 +17,7 @@ export const OUTLINE_COLOR = '#1890ff';
 
 export type PrimitiveType = (typeof PrmitiveMap)[keyof typeof PrmitiveMap];
 
-export interface IGeometry {
+export interface ISize {
   w: number;
   h: number;
 }
@@ -36,7 +36,21 @@ export interface IStyle {
   strokes: IPaint[];
 }
 
-export interface IBasePrimitive extends IGeometry, ITransform, IStyle {
+export const SIZE_PROPS = ['w', 'h'];
+
+export const TRANSFORM_PROPS = [
+  'x',
+  'y',
+  'rotation',
+  'skewX',
+  'skewY',
+  'scaleX',
+  'scaleY',
+];
+
+export const STYLE_PROPS = ['fills', 'strokes'];
+
+export interface IBasePrimitive extends ISize, ITransform, IStyle {
   // uuid, 对象的唯一id
   readonly uuid: string;
   // 节点类型
@@ -93,18 +107,6 @@ export abstract class AbstractPrimitive<
   /**
    * 需要重新绘制的自定义属性
    */
-  private static readonly CUSTOM_GEOMETRY_PROPS = new Set([
-    'w',
-    'h',
-    'fills',
-    'strokes',
-    'text',
-    'fontSize',
-    'fontFamily',
-    'fontWeight', // Text 属性
-    'src',
-    'scaleMode', // Picture 属性
-  ]);
 
   private _drawScheduled = false;
 
@@ -155,12 +157,11 @@ export abstract class AbstractPrimitive<
   }
 
   /**
-   * 检查属性是否需要重新绘制
+   * @description 当这些属性变化时需要重新绘制
+   * @returns
    */
-  private needsRedraw(attrs: Partial<Omit<T, 'uuid' | 'type'>>): boolean {
-    return Object.keys(attrs).some((key) =>
-      AbstractPrimitive.CUSTOM_GEOMETRY_PROPS.has(key)
-    );
+  protected getVisualAttrNames() {
+    return [...SIZE_PROPS, ...STYLE_PROPS];
   }
 
   /**
@@ -172,24 +173,49 @@ export abstract class AbstractPrimitive<
     this._drawScheduled = true;
     requestAnimationFrame(() => {
       this.draw();
+      this.emit('visual.changed');
       this._drawScheduled = false;
     });
   }
 
   /**
    * 更新属性
-   * - Pixi 原生属性：自动触发 Pixi 的脏标记
-   * - 自定义几何属性：需要重新绘制 Graphics
    */
-  updateAttrs(attrs: Partial<Omit<T, 'uuid' | 'type'>>) {
-    Object.assign(this, attrs);
-    this.emit('attr.changed', attrs);
+  updateAttrs(attrs: Partial<T>) {
+    const changed: string[] = [];
+    let hasGeometryChange = false;
+    let hasStyleChange = false;
+    let visualChange = false;
+    for (const key in attrs) {
+      if (this[key as keyof this] !== attrs[key]) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        (this as any)[key] = attrs[key];
+        changed.push(key);
 
-    // 只有自定义属性变化时才需要重新绘制
-    if (this.needsRedraw(attrs)) {
+        if (SIZE_PROPS.includes(key)) {
+          hasGeometryChange = true;
+        }
+        if (STYLE_PROPS.includes(key)) {
+          hasStyleChange = true;
+        }
+        if (this.getVisualAttrNames().includes(key)) {
+          visualChange = true;
+        }
+      }
+    }
+
+    if (changed.length > 0) {
+      this.emit('attr.changed', attrs);
+    }
+    if (hasGeometryChange) {
+      this.emit('size.changed', { attrs });
+    }
+    if (hasStyleChange) {
+      this.emit('style.changed', { attrs });
+    }
+    if (visualChange) {
       this.scheduleDraw();
     }
-    // Pixi 原生属性（如 x, y, rotation）会自动处理脏标记，无需手动绘制
   }
 
   /**
@@ -221,19 +247,12 @@ export abstract class AbstractPrimitive<
    * @param key
    * @returns
    */
-  getParameter(key: Exclude<keyof IBasePrimitive, 'uuid' | 'type'>): unknown {
-    return this[key];
+  getParameter(key: keyof Partial<T>): unknown {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    return (this as any)[key];
   }
-  setParameter<K extends Exclude<keyof IBasePrimitive, 'uuid' | 'type'>>(
-    key: K,
-    value: IBasePrimitive[K]
-  ): void {
-    (this as IBasePrimitive)[key] = value;
-
-    // 检查是否需要重绘
-    if (AbstractPrimitive.CUSTOM_GEOMETRY_PROPS.has(key as string)) {
-      this.scheduleDraw();
-    }
+  setParameter(key: keyof Partial<T>, value: unknown): void {
+    this.updateAttrs({ [key]: value } as unknown as Partial<T>);
   }
   applyFillsAndStrokes(): void {
     this.fills.forEach((fill) => {
