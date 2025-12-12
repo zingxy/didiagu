@@ -1,4 +1,4 @@
-import { Graphics } from 'pixi.js';
+import { Graphics, GraphicsContext } from 'pixi.js';
 import { AbstractPrimitive, IEllipse, PrmitiveMap } from './abstract-primitive';
 
 type IEllipseConfig = Partial<IEllipse>;
@@ -11,10 +11,8 @@ export class Ellipse extends AbstractPrimitive implements IEllipse {
     this.draw();
   }
 
-  override draw(): void {
-    this.graphics.clear();
-    this.graphics.ellipse(this.w / 2, this.h / 2, this.w / 2, this.h / 2);
-    this.applyFillsAndStrokes();
+  override buildPath(ctx: GraphicsContext): void {
+    ctx.ellipse(this.w / 2, this.h / 2, this.w / 2, this.h / 2);
   }
 
   override drawOutline(graphics: Graphics): void {

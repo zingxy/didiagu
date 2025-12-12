@@ -1,3 +1,4 @@
+import { GraphicsContext } from 'pixi.js';
 import { AbstractPrimitive, IRect, PrmitiveMap } from './abstract-primitive';
 
 type IRectConfig = Partial<IRect>;
@@ -10,10 +11,7 @@ export class Rect extends AbstractPrimitive implements IRect {
     Object.assign(this, config);
     this.draw();
   }
-
-  draw(): void {
-    this.graphics.clear();
-    this.graphics.rect(0, 0, this.w, this.h);
-    this.applyFillsAndStrokes();
+  public buildPath(ctx: GraphicsContext): void {
+    ctx.rect(0, 0, this.w, this.h);
   }
 }

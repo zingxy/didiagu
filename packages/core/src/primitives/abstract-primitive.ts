@@ -1,4 +1,4 @@
-import { Graphics, Container } from 'pixi.js';
+import { Graphics, Container, GraphicsContext } from 'pixi.js';
 import { nanoid } from 'nanoid';
 import { BASE_INSPECTOR_SCHEMA, InspectorSchema } from './inspector';
 import { IPaint } from './style';
@@ -96,7 +96,6 @@ export abstract class AbstractPrimitive<
 {
   abstract readonly type: PrimitiveType;
   uuid: string;
-  graphics: Graphics;
   axis: Graphics;
   w = 0;
   h = 0;
@@ -104,19 +103,31 @@ export abstract class AbstractPrimitive<
   strokes: IPaint[] = [];
   selectable = true;
 
+  graphics: Graphics;
+  clipGraphics?: Graphics;
+  clip: boolean = false;
+
   /**
    * 需要重新绘制的自定义属性
    */
 
   private _drawScheduled = false;
 
-  constructor() {
+  constructor(clip: boolean = false) {
     super();
     this.uuid = nanoid();
-    this.graphics = new Graphics();
-    this.addChild(this.graphics);
     this.eventMode = 'dynamic';
     this.interactive = true;
+    this.clip = clip;
+
+    this.graphics = new Graphics();
+    if (this.clip) {
+      this.clipGraphics = new Graphics(this.graphics.context);
+      this.addChild(this.clipGraphics);
+      this.mask = this.clipGraphics;
+    }
+
+    this.addChild(this.graphics);
     this.axis = new Graphics();
     this.addChild(this.axis);
     this.axis
@@ -221,7 +232,15 @@ export abstract class AbstractPrimitive<
   /**
    * @description 绘制图形路径, 不应该被外部调用
    */
-  protected abstract draw(): void;
+  protected draw() {
+    this.graphics.clear();
+    this.buildPath(this.graphics.context);
+    this.applyFillsAndStrokes();  
+  }
+
+  public buildPath(ctx: GraphicsContext): void {
+    ctx.rect(0, 0, this.w, this.h);
+  }
 
   /**
    * 绘制高亮轮廓。
