@@ -176,20 +176,6 @@ export abstract class AbstractPrimitive<
   }
 
   /**
-   * 调度绘制（防止同一帧内重复绘制）
-   */
-  private scheduleDraw(): void {
-    if (this._drawScheduled) return;
-
-    this._drawScheduled = true;
-    requestAnimationFrame(() => {
-      this.draw();
-      this.emit('visual.changed');
-      this._drawScheduled = false;
-    });
-  }
-
-  /**
    * 更新属性
    */
   updateAttrs(attrs: Partial<T>) {
@@ -225,7 +211,7 @@ export abstract class AbstractPrimitive<
       this.emit('style.changed', { attrs });
     }
     if (visualChange) {
-      this.scheduleDraw();
+      this.draw();
     }
   }
 
@@ -235,7 +221,7 @@ export abstract class AbstractPrimitive<
   protected draw() {
     this.graphics.clear();
     this.buildPath(this.graphics.context);
-    this.applyFillsAndStrokes();  
+    this.applyFillsAndStrokes();
   }
 
   public buildPath(ctx: GraphicsContext): void {
