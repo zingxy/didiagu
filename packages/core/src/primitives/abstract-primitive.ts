@@ -183,7 +183,7 @@ export abstract class AbstractPrimitive<
    */
   updateAttrs(attrs: Partial<T>) {
     const changed: string[] = [];
-    let hasGeometryChange = false;
+    let hasSizeChange = false;
     let hasStyleChange = false;
     let visualChange = false;
     for (const key in attrs) {
@@ -193,7 +193,7 @@ export abstract class AbstractPrimitive<
         changed.push(key);
 
         if (SIZE_PROPS.includes(key)) {
-          hasGeometryChange = true;
+          hasSizeChange = true;
         }
         if (STYLE_PROPS.includes(key)) {
           hasStyleChange = true;
@@ -207,7 +207,7 @@ export abstract class AbstractPrimitive<
     if (changed.length > 0) {
       this.emit('attr.changed', attrs);
     }
-    if (hasGeometryChange) {
+    if (hasSizeChange) {
       this.emit('size.changed', { attrs });
     }
     if (hasStyleChange) {
