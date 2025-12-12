@@ -52,6 +52,8 @@ export class HoverManager implements IEventHandler {
 
     this.g.clear();
     this.g.context.transform(primitive.worldTransform);
+    // BUG: 这里不应该用setFromMatrix，否则会出现线条不均匀的问题
+    // this.g.setFromMatrix(primitive.worldTransform)
     primitive.buildPath(this.g.context);
     this.g.stroke({
       color: 0xff0000,
