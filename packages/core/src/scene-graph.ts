@@ -23,7 +23,7 @@ export class SceneGraph {
   /**
    * @description 这里是cameraSpace/Viewport
    */
-  private readonly cameraSpace: PIXI.Container;
+  public readonly cameraSpace: PIXI.Container;
   /**
    * p_camera  = viewMatrix * p_world
    */
@@ -66,7 +66,6 @@ export class SceneGraph {
     // 应用变换到场景容器, **注意这里是直接设置scene的矩阵**
     this.scene.setFromMatrix(matrix);
     this.viewMatrix = matrix;
-
     // 更新所有文字对象的 resolution 以保持清晰度
     this.updateTextResolution(matrix);
   }

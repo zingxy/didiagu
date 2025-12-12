@@ -86,4 +86,8 @@ export class Camera implements IEventHandler {
     this.eventBus.emit('camera.changed', this.transform.clone());
     return true; // 事件已处理
   };
+  getZoom(): number {
+    // 假设均匀缩放，返回 x 方向的缩放因子
+    return this.transform.a;
+  }
 }
