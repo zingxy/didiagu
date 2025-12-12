@@ -9,7 +9,7 @@
 import { Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
-import { AbstractPrimitive, Layer, LayerConfig } from './primitives';
+import { AbstractPrimitive } from './primitives';
 import { SpatialIndexManager } from './spatial-index-manager';
 import { Text } from './primitives/shape-text';
 
