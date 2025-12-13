@@ -1,8 +1,8 @@
-import { FederatedPointerEvent, Matrix, Bounds } from 'pixi.js';
+import { FederatedPointerEvent, Matrix, Bounds, Transform } from 'pixi.js';
 import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
-import { decompose } from '@didiagu/math';
+import { decompose, decomposePixi, normalizeRect } from '@didiagu/math';
 import { Editor } from '..';
 
 interface IContext {
@@ -523,16 +523,18 @@ export class Transformer extends AbstractPrimitive {
       // 为什么要分离出scale? scale会影响stroke的宽度，导致变形
       const newMatrix = localDelta.append(primitive.localTransform);
       const { x, y, rotation, skewX, skewY, scaleX, scaleY } =
-        decompose(newMatrix);
-      primitive.x = x;
-      primitive.y = y;
+        decomposePixi(newMatrix);
       primitive.rotation = rotation;
       primitive.skew.x = skewX;
       primitive.skew.y = skewY;
       primitive.scale.set(1, 1);
       primitive.updateAttrs({
-        w: primitive.w * scaleX,
-        h: primitive.h * scaleY,
+        ...normalizeRect(
+          x,
+          y,
+          primitive.w * scaleX,
+          primitive.h * scaleY
+        ),
       }); // 触发重绘
     });
   };

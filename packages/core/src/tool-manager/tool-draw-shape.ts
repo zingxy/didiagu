@@ -3,6 +3,7 @@ import type { ITool, IPoint } from './types';
 import { AbstractPrimitive } from '../primitives';
 import { Editor } from '../editor';
 import { DRAG_THRESHOLD } from '../contants';
+import { normalizeRect } from '@didiagu/math';
 
 abstract class AbstractDrawShapeTool implements ITool {
   abstract readonly id: string;
@@ -86,10 +87,7 @@ abstract class AbstractDrawShapeTool implements ITool {
     }
 
     this.drawingShape.updateAttrs({
-      x: w >= 0 ? startLocal.x : startLocal.x + w,
-      y: h >= 0 ? startLocal.y : startLocal.y + h,
-      w: Math.abs(w),
-      h: Math.abs(h),
+      ...normalizeRect(startLocal.x, startLocal.y, w, h),
     });
 
     this.last = { x: e.global.x, y: e.global.y };
