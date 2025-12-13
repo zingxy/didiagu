@@ -501,10 +501,19 @@ export class Transformer extends AbstractPrimitive {
     this.dragging = false;
     this.lastInWorld = null;
   };
+  apply(primitive: AbstractPrimitive, m: Matrix) {
+    const { x, y, rotation, skewX, skewY, scaleX, scaleY } = decomposePixi(m);
+    primitive.rotation = rotation;
+    primitive.skew.x = skewX;
+    primitive.skew.y = skewY;
+    primitive.scale.set(1, 1);
+    primitive.updateAttrs({
+      ...normalizeRect(x, y, primitive.w * scaleX, primitive.h * scaleY),
+    }); // 触发重绘
+  }
 
   applyTransform = (delta: Matrix) => {
-    this.setFromMatrix(delta.clone().append(this.localTransform));
-    this.updateLocalTransform();
+    this.apply(this, delta.clone().append(this.localTransform));
     this.selectedPrimitives.forEach((primitive) => {
       const primitiveParentTransform = primitive.parent!.worldTransform.clone();
       const invertPrimitiveParentTransform = primitiveParentTransform
@@ -522,20 +531,16 @@ export class Transformer extends AbstractPrimitive {
         .append(primitiveParentTransform);
       // 为什么要分离出scale? scale会影响stroke的宽度，导致变形
       const newMatrix = localDelta.append(primitive.localTransform);
-      const { x, y, rotation, skewX, skewY, scaleX, scaleY } =
-        decomposePixi(newMatrix);
-      primitive.rotation = rotation;
-      primitive.skew.x = skewX;
-      primitive.skew.y = skewY;
-      primitive.scale.set(1, 1);
-      primitive.updateAttrs({
-        ...normalizeRect(
-          x,
-          y,
-          primitive.w * scaleX,
-          primitive.h * scaleY
-        ),
-      }); // 触发重绘
+      this.apply(primitive, newMatrix);
+      // const { x, y, rotation, skewX, skewY, scaleX, scaleY } =
+      //   decomposePixi(newMatrix);
+      // primitive.rotation = rotation;
+      // primitive.skew.x = skewX;
+      // primitive.skew.y = skewY;
+      // primitive.scale.set(1, 1);
+      // primitive.updateAttrs({
+      //   ...normalizeRect(x, y, primitive.w * scaleX, primitive.h * scaleY),
+      // }); // 触发重绘
     });
   };
 
