@@ -77,7 +77,6 @@ export class SelectionManager {
    * 如果要实时同步选区变化,直接访问editor.selectionManager.selected.
    */
   selectionChange() {
-    this.updateOutline();
     this.updateTransformer();
     if (this.dirty) return;
     this.dirty = true;
@@ -88,22 +87,9 @@ export class SelectionManager {
   }
 
   onSelectedPrimitiveAttrChanged = () => {
-    this.updateOutline();
     this.updateTransformer();
   };
 
-  updateOutline() {
-    this.outlineGraphics.clear();
-    for (const primitive of this.selected) {
-      this.outlineGraphics.resetTransform();
-      this.outlineGraphics.transform(
-        this.editor.sceneGraph.getSceneTransform(primitive)
-      );
-      primitive.drawOutline(this.outlineGraphics);
-      this.outlineGraphics.stroke(OUTLINE_COLOR);
-    }
-    this.sceneGraph.helperLayer.addChild(this.outlineGraphics);
-  }
   updateTransformer() {
     this.transformer.update(Array.from(this.selected));
   }
