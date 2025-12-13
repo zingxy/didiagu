@@ -8,6 +8,7 @@ import { SelectionManager } from './selection';
 import { ActionsManager } from './action-manager';
 import { TextEditor } from './text-editor';
 import { HoverManager } from './hoverManager';
+import { TransformerManager } from './transformer';
 export interface EditorEvents {
   // Define editor-specific events here
   'editor.initialized': () => void;
@@ -36,6 +37,7 @@ export class Editor extends EventBus {
   public readonly actionManager: ActionsManager;
   public readonly textEditor: TextEditor;
   public readonly highlightManager: HoverManager;
+  public readonly transformerManager: TransformerManager;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
     super();
@@ -48,6 +50,7 @@ export class Editor extends EventBus {
     this.actionManager = new ActionsManager(this);
     this.textEditor = new TextEditor(this);
     this.highlightManager = new HoverManager(this);
+    this.transformerManager = new TransformerManager(this);
 
     this.options = { ...defaultEditorOptions, ...options };
   }

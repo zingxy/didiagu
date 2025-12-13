@@ -383,7 +383,8 @@ export class Transformer extends AbstractPrimitive {
       let maxX = -Infinity;
       let maxY = -Infinity;
       for (const primitive of primitives) {
-        const bounds = this.editor.sceneGraph.getSceneBounds(primitive);
+        // FIXME 需要转换到transformer父坐标系, 现在刚好将transformer放在cameraSpace下，所以work
+        const bounds = primitive.getBounds();
         minX = Math.min(minX, bounds.minX);
         minY = Math.min(minY, bounds.minY);
         maxX = Math.max(maxX, bounds.maxX);

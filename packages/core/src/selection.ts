@@ -1,17 +1,16 @@
 /**
  * @file selection.ts
- * @description 选区管理
+ * @description 选区管理, 负责选区的增删改查及选区变化事件的触发.
+ * 注意如果选区里面元素的属性发生变化，不会触发选区变化事件.
  * @author HongQing Zeng
  * @date 2025-11-17
  * @version 1.0.0
  */
-import { Graphics } from 'pixi.js';
 import { Editor } from './editor';
 import { AbstractPrimitive } from './primitives';
-import { Transformer } from './primitives/shape-transformer';
 
 export interface SelectionManagerEvents {
-  /** 选区变化 */
+  /** 选区变化:仅在选区内元素被添加或移除时触发 */
   'selection.changed': (selected: AbstractPrimitive[]) => void;
 }
 export const OUTLINE_COLOR = '#1890ff';
@@ -21,23 +20,17 @@ export class SelectionManager {
   private bus: Editor['bus'];
   public selected: Set<AbstractPrimitive>;
   private sceneGraph: Editor['sceneGraph'];
-  private outlineGraphics = new Graphics();
-  private transformer: Transformer;
-  private dirty = false;
 
   constructor(editor: Editor) {
     this.editor = editor;
     this.bus = editor.bus;
     this.sceneGraph = editor.sceneGraph;
     this.selected = new Set<AbstractPrimitive>();
-    this.transformer = new Transformer(editor)
-    this.sceneGraph.helperLayer.addChild(this.transformer);
   }
   select(primitives: AbstractPrimitive[]) {
     for (const primitive of primitives) {
       if (this.selected.has(primitive)) continue;
       this.selected.add(primitive);
-      primitive.on('attr.changed', this.onSelectedPrimitiveAttrChanged);
       this.selectionChange();
     }
   }
@@ -46,7 +39,6 @@ export class SelectionManager {
     for (const primitive of primitives) {
       if (!this.selected.has(primitive)) continue;
       this.selected.delete(primitive);
-      primitive.off('attr.changed', this.onSelectedPrimitiveAttrChanged);
       this.selectionChange();
     }
   }
@@ -54,43 +46,13 @@ export class SelectionManager {
     this.deselect(Array.from(this.selected));
   }
 
-  selectAll() {
-    const arr: AbstractPrimitive[] = [];
-    this.editor.sceneGraph.traverse(
-      this.editor.sceneGraph.getDefaultLayer(),
-      (node) => {
-        if (node instanceof AbstractPrimitive) {
-          arr.push(node);
-        }
-      }
-    );
-    this.select(arr);
-  }
+  selectAll() {}
   selectOnly(primitive: AbstractPrimitive) {
     this.deselectAll();
     this.select([primitive]);
   }
 
-  /**
-   *
-   * @description 选区变化事件触发, 使用微任务合并多次变化,避免频繁触发selection.changed事件.
-   * 如果要实时同步选区变化,直接访问editor.selectionManager.selected.
-   */
   selectionChange() {
-    this.updateTransformer();
-    if (this.dirty) return;
-    this.dirty = true;
-    Promise.resolve().then(() => {
-      this.bus.emit('selection.changed', Array.from(this.selected));
-      this.dirty = false;
-    });
-  }
-
-  onSelectedPrimitiveAttrChanged = () => {
-    this.updateTransformer();
-  };
-
-  updateTransformer() {
-    this.transformer.update(Array.from(this.selected));
+    this.bus.emit('selection.changed', Array.from(this.selected));
   }
 }
