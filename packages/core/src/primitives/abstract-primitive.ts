@@ -97,7 +97,6 @@ export abstract class AbstractPrimitive<
 {
   abstract readonly type: PrimitiveType;
   uuid: string;
-  axis: Graphics;
   w = 0;
   h = 0;
   fills: IPaint[] = [];
@@ -129,15 +128,6 @@ export abstract class AbstractPrimitive<
     }
 
     this.addChild(this.graphics);
-    this.axis = new Graphics();
-    this.addChild(this.axis);
-    this.axis
-      .moveTo(0, 0)
-      .lineTo(10, 0)
-      .stroke('#ff0000')
-      .moveTo(0, 0)
-      .lineTo(0, 10)
-      .stroke('#00ff00');
   }
 
   get scaleX() {
