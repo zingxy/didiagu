@@ -1,4 +1,4 @@
-import { FederatedPointerEvent, Matrix, Bounds, Transform } from 'pixi.js';
+import { FederatedPointerEvent, Matrix, Bounds, Text } from 'pixi.js';
 import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
@@ -281,6 +281,7 @@ export class Transformer extends AbstractPrimitive {
     strokes: [{ type: 'SOLID', color: '#0000ff' }],
     selectable: false,
   });
+  private sizeGraphic: Text;
   private editor: Editor;
   constructor(editor: Editor) {
     super();
@@ -288,6 +289,8 @@ export class Transformer extends AbstractPrimitive {
     this.eventMode = 'dynamic';
     this.interactive = true;
     this.editor = editor;
+    this.sizeGraphic = new Text();
+    this.addChild(this.sizeGraphic);
     // this.addChild(this.overlay);
     // 创建控制点
     for (const handle of handles) {
@@ -464,6 +467,10 @@ export class Transformer extends AbstractPrimitive {
   }
 
   override draw(): void {
+    this.updateHandlerPositions();
+    this.updateSizeIndicator();
+  }
+  updateHandlerPositions() {
     for (const handle of handles) {
       const pos = handle.getPosition(this);
       const handleRect = this.handleMap[handle.handleType];
@@ -472,6 +479,19 @@ export class Transformer extends AbstractPrimitive {
         y: pos.y,
       });
     }
+  }
+
+  updateSizeIndicator() {
+    const zoom = this.editor.camera.getZoom();
+    this.sizeGraphic.text = `${Math.round(this.w / zoom)} x ${Math.round(
+      this.h / zoom
+    )}`;
+    this.sizeGraphic.style.fontSize = 12;
+    this.sizeGraphic.style.fontFamily = 'Arial';
+    this.sizeGraphic.style.fontWeight = '400';
+    this.sizeGraphic.style.fill = 0x000000;
+    this.sizeGraphic.x = this.w / 2 - this.sizeGraphic.width / 2;
+    this.sizeGraphic.y = this.h + cpSize;
   }
   onPointerdown = (event: FederatedPointerEvent) => {
     event.stopPropagation();
