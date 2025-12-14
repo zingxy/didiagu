@@ -481,11 +481,6 @@ export class Transformer extends AbstractPrimitive {
   onGlobalpointermove = (e: FederatedPointerEvent) => {
     if (!this.dragging || !this.lastInWorld) return;
 
-    /**
-     * 为什么需要转换到父节点坐标系？
-     * 因为 Transformer 可能会被缩放或旋转，直接使用全局坐标的差值会导致移动不准确。
-     * 转换到父节点坐标系后，可以确保移动是基于父节点的坐标系进行计算的，从而保证了移动的准确性。
-     */
     const transformerParent = this.parent;
     if (!transformerParent) return;
     const context = this.getContext({
@@ -502,6 +497,11 @@ export class Transformer extends AbstractPrimitive {
     this.lastInWorld = null;
   };
   apply(primitive: AbstractPrimitive, m: Matrix) {
+    // primitive.setFromMatrix(m);
+    // primitive.updateLocalTransform();
+    // return;
+    // FIXME 使用下面的方法在移动过程中会导致图形和transformer不同步
+    // 尤其是transformer带有strokes时更明显
     const { x, y, rotation, skewX, skewY, scaleX, scaleY } = decomposePixi(m);
     primitive.rotation = rotation;
     primitive.skew.x = skewX;
