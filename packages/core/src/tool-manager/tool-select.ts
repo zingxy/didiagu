@@ -81,6 +81,9 @@ export class SelectTool implements ITool {
     return true;
   }
   onPointerUp(): boolean | void {
+    if (!this.pressed) {
+      return;
+    }
     const primitives = this.editor.sceneGraph.getPrimiveByBounds(
       this.editor.sceneGraph.getSceneBounds(this.selectBox)
     );
