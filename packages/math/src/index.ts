@@ -39,7 +39,6 @@ export function decompose(matrix: Matrix) {
   } else {
     // a = b = c = d = 0
   }
-  console.log('konva' , result);
   return result;
 }
 
