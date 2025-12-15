@@ -9,7 +9,7 @@
 import { isIntersect, Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
-import { AbstractPrimitive } from './primitives';
+import { AbstractPrimitive, Line } from './primitives';
 import { SpatialIndexManager } from './spatial-index-manager';
 import { Text } from './primitives/shape-text';
 
@@ -136,7 +136,19 @@ export class SceneGraph {
     const primitives: AbstractPrimitive[] = [];
     this.trverseDoc((node) => {
       const nodeBounds = this.getSceneBounds(node);
-      if (isIntersect(bounds, nodeBounds)) {
+      if (node instanceof Line) {
+        // 线段特殊处理，判断是否与bounds相交
+        // FIXME: 这里只考虑了线段的两个端点，实际情况需要考虑线段与bounds的所有边相交的情况  
+        const start = { x: nodeBounds.minX, y: nodeBounds.minY };
+        const end = { x: nodeBounds.maxX, y: nodeBounds.maxY };
+        const hit =
+          bounds.containsPoint(start.x, start.y) ||
+          bounds.containsPoint(end.x, end.y);
+
+        if (hit) {
+          primitives.push(node);
+        }
+      } else if (isIntersect(bounds, nodeBounds)) {
         primitives.push(node);
       }
     });
