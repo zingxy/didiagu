@@ -12,6 +12,7 @@ import type { ITool } from './types';
 import { DrawRectTool } from './tool-draw-rect';
 import { DrawEllipseTool } from './tool-draw-ellipse ';
 import { DrawFrameTool } from './tool-draw-frame';
+import { DrawLineTool } from './tool-draw-line';
 import { SelectTool } from './tool-select';
 import { DrawPictureTool } from './tool-draw-picture';
 import { TextTool } from './tool-text';
@@ -38,6 +39,7 @@ export class ToolManager implements IEventHandler {
     this.register(new DrawFrameTool(editor));
     this.register(new SelectTool(editor));
     this.register(new TextTool(editor));
+    this.register(new DrawLineTool(editor));
     this.setCurrentTool('SELECT');
   }
 
@@ -80,6 +82,7 @@ type Tools = [
   DrawEllipseTool,
   DrawPictureTool,
   DrawFrameTool,
+  DrawLineTool,
   SelectTool,
   TextTool
 ];

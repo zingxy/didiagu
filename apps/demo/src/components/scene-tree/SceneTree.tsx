@@ -56,6 +56,13 @@ const SHAPE_MAP: Record<PrimitiveType, { icon: React.ReactNode }> = {
       </span>
     ),
   },
+  Line: {
+    icon: (
+      <span className="w-full h-full flex justify-center items-center">
+        <RectToolIcon />
+      </span>
+    ),
+  },
 };
 
 export default function SceneTree() {

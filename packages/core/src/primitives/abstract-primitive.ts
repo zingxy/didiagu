@@ -12,6 +12,7 @@ export const PrmitiveMap = {
   Transformer: 'Transformer',
   Picture: 'Picture',
   Text: 'Text',
+  Line: 'Line',
 } as const;
 
 export const OUTLINE_COLOR = '#1890ff';
@@ -72,6 +73,9 @@ export interface IEllipse extends IBasePrimitive {
 
 export interface IFrame extends IBasePrimitive {
   type: 'Frame';
+}
+export interface ILine extends IBasePrimitive {
+  type: 'Line';
 }
 
 export interface IPicture extends IBasePrimitive {
