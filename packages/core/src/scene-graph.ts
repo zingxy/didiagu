@@ -31,7 +31,7 @@ export class SceneGraph {
   /**
    * @description **逻辑**世界空间，区别于pixijs的world
    */
-  private readonly scene: PIXI.Container;
+  public readonly scene: PIXI.Container;
   /**
    * @description 空间索引
    */
@@ -138,7 +138,7 @@ export class SceneGraph {
       const nodeBounds = this.getSceneBounds(node);
       if (node instanceof Line) {
         // 线段特殊处理，判断是否与bounds相交
-        // FIXME: 这里只考虑了线段的两个端点，实际情况需要考虑线段与bounds的所有边相交的情况  
+        // FIXME: 这里只考虑了线段的两个端点，实际情况需要考虑线段与bounds的所有边相交的情况
         const start = { x: nodeBounds.minX, y: nodeBounds.minY };
         const end = { x: nodeBounds.maxX, y: nodeBounds.maxY };
         const hit =

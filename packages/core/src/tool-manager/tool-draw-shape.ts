@@ -14,8 +14,8 @@ abstract class AbstractDrawShapeTool implements ITool {
   private last: IPoint | null = null;
   private delta: IPoint | null = null;
   // 当前正在绘制的矩形
-  private drawingShape: AbstractPrimitive | null = null;
-  private editor: Editor;
+  protected drawingShape: AbstractPrimitive | null = null;
+  protected editor: Editor;
   // 图形计数器
   private counter: number = 0;
   constructor(editor: Editor) {
@@ -86,9 +86,7 @@ abstract class AbstractDrawShapeTool implements ITool {
       }
     }
 
-    this.drawingShape.updateAttrs({
-      ...normalizeRect(startLocal.x, startLocal.y, w, h),
-    });
+    this.updateShape(startLocal, currentLocal, w, h);
 
     this.last = { x: e.global.x, y: e.global.y };
   }
@@ -120,9 +118,15 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.delta = null;
     this.drawingShape = null;
   }
-
   /** 创建图形 */
   abstract createShape(): AbstractPrimitive;
+  /** 更新图形属性 */
+  updateShape(start: IPoint, end: IPoint, w: number, h: number) {
+    if (!this.drawingShape) return;
+    this.drawingShape.updateAttrs({
+      ...normalizeRect(start.x, start.y, w, h),
+    });
+  }
   /** 完成图形 */
   abstract finalizeShape(): void;
   /** 获取宽高比约束，返回 null 表示不约束，返回数字表示 width/height 的比例 */

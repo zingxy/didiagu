@@ -77,6 +77,10 @@ export interface IFrame extends IBasePrimitive {
 }
 export interface ILine extends IBasePrimitive {
   type: 'Line';
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
 }
 
 export interface IPicture extends IBasePrimitive {
