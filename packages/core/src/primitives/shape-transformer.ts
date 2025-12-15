@@ -1,9 +1,15 @@
-import { FederatedPointerEvent, Matrix, Bounds, Text } from 'pixi.js';
+import {
+  FederatedPointerEvent,
+  Matrix,
+  Bounds,
+  Text,
+  GraphicsContext,
+} from 'pixi.js';
 import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
 import { decompose, decomposePixi, normalizeRect } from '@didiagu/math';
-import { Editor } from '..';
+import { Editor, Ellipse } from '..';
 
 interface IContext {
   lastInWorld: IPoint;
@@ -102,12 +108,11 @@ type HandleType =
   | 'mover'
   | (string & {});
 const cpSize = 20;
-const offset = cpSize / 2;
 export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-left',
     getPosition() {
-      return { x: -offset, y: -offset };
+      return { x: -0, y: -0 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w - dx) / w,
@@ -118,7 +123,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-middle',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w / 2 - offset, y: -offset };
+      return { x: primitive.w / 2, y: 0 };
     },
     onPointermove: createScaleHandler({
       getScaleY: (dy, h) => (h - dy) / h,
@@ -128,7 +133,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-right',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w - offset, y: -offset };
+      return { x: primitive.w, y: 0 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w + dx) / w,
@@ -139,7 +144,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'middle-right',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w - offset, y: primitive.h / 2 - offset };
+      return { x: primitive.w, y: primitive.h / 2 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w + dx) / w,
@@ -149,7 +154,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'bottom-right',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w - offset, y: primitive.h - offset };
+      return { x: primitive.w, y: primitive.h };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w + dx) / w,
@@ -160,7 +165,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'bottom-middle',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w / 2 - offset, y: primitive.h - offset };
+      return { x: primitive.w / 2, y: primitive.h };
     },
     onPointermove: createScaleHandler({
       getScaleY: (dy, h) => (h + dy) / h,
@@ -170,7 +175,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'bottom-left',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: -offset, y: primitive.h - offset };
+      return { x: 0, y: primitive.h };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w - dx) / w,
@@ -181,7 +186,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'middle-left',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: -offset, y: primitive.h / 2 - offset };
+      return { x: 0, y: primitive.h / 2 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w - dx) / w,
@@ -191,7 +196,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'rotate',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w / 2 - offset, y: -40 - offset };
+      return { x: primitive.w / 2, y: -40 };
     },
     onPointermove(context) {
       const { centerInParent, currentInParent, lastInParent } = context;
@@ -217,7 +222,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'mover',
     getPosition(primitive: AbstractPrimitive) {
-      return { x: primitive.w / 2 - offset, y: primitive.h / 2 - offset };
+      return { x: primitive.w / 2, y: primitive.h / 2 };
     },
     onPointermove(context) {
       const { lastInParent, currentInParent } = context;
@@ -228,7 +233,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     },
   },
 ];
-export class Handler extends Rect {
+export class Handler extends Ellipse {
   handleType: string;
   handleConfig: IHandleConfig;
   deactivate: () => void;
@@ -261,6 +266,9 @@ export class Handler extends Rect {
   }
   onPointerup(context: Partial<IContext>) {
     this.handleConfig.onPointerup?.(context);
+  }
+  buildPath(ctx: GraphicsContext): void {
+    ctx.circle(this.x, this.y, cpSize / 2);
   }
 }
 
