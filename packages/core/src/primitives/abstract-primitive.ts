@@ -2,7 +2,7 @@ import { Graphics, Container, GraphicsContext } from 'pixi.js';
 import { nanoid } from 'nanoid';
 import { BASE_INSPECTOR_SCHEMA, InspectorSchema } from './inspector';
 import { IPaint } from './style';
-import * as PIXI from 'pixi.js';
+import { IHandleConfig } from './shape-transformer';
 
 export const PrmitiveMap = {
   Rect: 'Rect',
@@ -61,6 +61,7 @@ export interface IBasePrimitive extends ISize, ITransform, IStyle {
   label: string;
   // 是否可选中
   selectable: boolean;
+  controlPoints: IHandleConfig[];
 }
 
 export interface IRect extends IBasePrimitive {
@@ -106,6 +107,7 @@ export abstract class AbstractPrimitive<
   fills: IPaint[] = [];
   strokes: IPaint[] = [];
   selectable = true;
+  controlPoints: IHandleConfig[] = [];
 
   graphics: Graphics;
   clipGraphics?: Graphics;
@@ -268,8 +270,5 @@ export abstract class AbstractPrimitive<
         });
       }
     });
-  }
-  containsPoint(point: PIXI.Point): boolean {
-    return this.graphics.bounds.containsPoint(point.x, point.y);
   }
 }

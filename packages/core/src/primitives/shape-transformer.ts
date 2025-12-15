@@ -23,9 +23,9 @@ interface IContext {
    * */
   updater: (deltaMatrix: Matrix) => void;
 }
-interface IHandleConfig {
+export interface IHandleConfig {
   handleType: HandleType;
-  getPosition(primitive: AbstractPrimitive): { x: number; y: number };
+  getPosition(transformer: AbstractPrimitive): { x: number; y: number };
   onPointerdown?(context: Partial<IContext>): void;
   onPointermove?(context: IContext): void;
   onPointerup?(context: Partial<IContext>): void;
@@ -99,10 +99,11 @@ type HandleType =
   | 'bottom-left'
   | 'middle-left'
   | 'rotate'
-  | 'mover';
+  | 'mover'
+  | (string & {});
 const cpSize = 20;
 const offset = cpSize / 2;
-const handles: IHandleConfig[] = [
+export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-left',
     getPosition() {
@@ -270,7 +271,8 @@ export class Handler extends Rect {
 export class Transformer extends AbstractPrimitive {
   override readonly type = PrmitiveMap.Transformer;
   private selectedPrimitives: AbstractPrimitive[] = [];
-  private handleMap = {} as Record<HandleType, Handler>;
+  // handles pool
+  private handles = new Set<Handler>();
   private dragging = false;
   private lastInWorld: IPoint | null = null;
   private activeHandle: Handler | null = null;
@@ -290,17 +292,6 @@ export class Transformer extends AbstractPrimitive {
     this.sizeGraphic = new Text();
     this.addChild(this.sizeGraphic);
     // this.addChild(this.overlay);
-    // 创建控制点
-    for (const handle of handles) {
-      this.handleMap[handle.handleType] = new Handler(
-        handle,
-        this.activateHandler,
-        this.deactivateHandler
-      );
-      this.addChild(this.handleMap[handle.handleType]);
-    }
-
-    this.update([]);
 
     this.on('pointerdown', this.onPointerdown);
     /**
@@ -317,7 +308,7 @@ export class Transformer extends AbstractPrimitive {
   }
   update(selected: AbstractPrimitive[]) {
     this.selectedPrimitives = selected;
-
+    let handleConfigs: IHandleConfig[] = defaultHandleConfigs;
     if (this.selectedPrimitives.length === 0) {
       this.visible = false;
       return;
@@ -327,6 +318,9 @@ export class Transformer extends AbstractPrimitive {
     if (this.selectedPrimitives.length === 1) {
       // 计算primitive四个角点在transformer父坐标系中的位置
       const primitive = this.selectedPrimitives[0];
+      if (primitive.controlPoints.length > 0) {
+        handleConfigs = primitive.controlPoints;
+      }
       const corners = [
         { x: 0, y: 0 },
         { x: primitive.w, y: 0 },
@@ -377,7 +371,6 @@ export class Transformer extends AbstractPrimitive {
         h: height,
       });
     } else {
-      // 多个图形时使用AABB（轴对齐包围盒）
       const primitives = this.selectedPrimitives;
       let minX = Infinity;
       let minY = Infinity;
@@ -409,6 +402,22 @@ export class Transformer extends AbstractPrimitive {
         h,
       });
     }
+    const handlesArray = Array.from(this.handles.values());
+    handlesArray.forEach((handle) => {
+      handle.visible = false;
+    });
+    for (let i = 0; i < handleConfigs.length; i++) {
+      const handleConfig = handleConfigs[i];
+      const handle =
+        handlesArray[i] ||
+        new Handler(handleConfig, this.activateHandler, this.deactivateHandler);
+      handle.handleConfig = handleConfig;
+      handle.handleType = handleConfig.handleType;
+      handle.visible = true;
+      this.addChild(handle);
+      this.handles.add(handle);
+    }
+    this.draw();
   }
 
   getContext(currentInWorld: IPoint): IContext {
@@ -452,14 +461,14 @@ export class Transformer extends AbstractPrimitive {
     this.updateSizeIndicator();
   }
   updateHandlerPositions() {
-    for (const handle of handles) {
-      const pos = handle.getPosition(this);
-      const handleRect = this.handleMap[handle.handleType];
-      handleRect.updateAttrs({
+    this.handles.forEach((handle) => {
+      if (!handle.visible) return;
+      const pos = handle.handleConfig.getPosition(this);
+      handle.updateAttrs({
         x: pos.x,
         y: pos.y,
       });
-    }
+    });
   }
 
   updateSizeIndicator() {
@@ -498,9 +507,9 @@ export class Transformer extends AbstractPrimitive {
     this.lastInWorld = null;
   };
   apply(primitive: AbstractPrimitive, m: Matrix) {
-    // primitive.setFromMatrix(m);
-    // primitive.updateLocalTransform();
-    // return;
+    primitive.setFromMatrix(m);
+    primitive.updateLocalTransform();
+    return;
     // FIXME 使用下面的方法在移动过程中会导致图形和transformer不同步
     // 尤其是transformer带有strokes时更明显
     const { x, y, rotation, skewX, skewY, scaleX, scaleY } = decomposePixi(m);
