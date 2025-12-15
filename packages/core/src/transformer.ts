@@ -19,7 +19,6 @@ export class TransformerManager {
     if (selected.length === 0) {
       this.transformer.visible = false;
     }
-    console.log('update transformer', selected);
     this.transformer.update(selected);
   };
 }
