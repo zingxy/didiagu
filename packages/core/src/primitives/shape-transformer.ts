@@ -14,11 +14,9 @@ interface IContext {
   currentInParent: IPoint;
   currentInTransformer: IPoint;
 
-  pivotInWorld: IPoint;
-  pivotInParent: IPoint;
+  centerInParent: IPoint;
 
-  boundingBoxInParent: Bounds;
-  boundingBoxInTransformer: Bounds;
+  localBounds: Bounds;
   transformer: Transformer;
   /** the **delta** matrix which will apply to the transformer,
    * which means this is a matrix defined in transformers's parent coordinate system.
@@ -66,7 +64,7 @@ function createScaleHandler(config: ScaleConfig) {
     const {
       lastInTransformer,
       currentInTransformer,
-      boundingBoxInTransformer: { minX, minY, maxX, maxY },
+      localBounds: { minX, minY, maxX, maxY },
     } = context;
 
     const dx = currentInTransformer.x - lastInTransformer.x;
@@ -195,20 +193,20 @@ const handles: IHandleConfig[] = [
       return { x: primitive.w / 2 - offset, y: -40 - offset };
     },
     onPointermove(context) {
-      const { pivotInParent, currentInParent, lastInParent } = context;
+      const { centerInParent, currentInParent, lastInParent } = context;
       const v1 = {
-        x: lastInParent.x - pivotInParent.x,
-        y: lastInParent.y - pivotInParent.y,
+        x: lastInParent.x - centerInParent.x,
+        y: lastInParent.y - centerInParent.y,
       };
       const v2 = {
-        x: currentInParent.x - pivotInParent.x,
-        y: currentInParent.y - pivotInParent.y,
+        x: currentInParent.x - centerInParent.x,
+        y: currentInParent.y - centerInParent.y,
       };
       const angle1 = Math.atan2(v1.y, v1.x);
       const angle2 = Math.atan2(v2.y, v2.x);
       const deltaAngle = angle2 - angle1;
 
-      const t = new Matrix().translate(pivotInParent.x, pivotInParent.y);
+      const t = new Matrix().translate(centerInParent.x, centerInParent.y);
       const invertT = t.clone().invert();
       const r = new Matrix().rotate(deltaAngle);
       const deltaMatrix = t.append(r).append(invertT);
@@ -421,39 +419,22 @@ export class Transformer extends AbstractPrimitive {
     const lastInTransformer = this.toLocal(lastInWorld);
     const currentInTransformer = this.toLocal(currentInWorld);
 
-    // 计算 transformer 四个角点在父级坐标系中的位置
-    const topLeft = transformerParent.toLocal({ x: 0, y: 0 }, this);
-    const bottomRight = transformerParent.toLocal(
-      { x: this.w, y: this.h },
-      this
-    );
-
     return {
       transformer: this,
-      boundingBoxInParent: new Bounds(
-        topLeft.x,
-        topLeft.y,
-        bottomRight.x,
-        bottomRight.y
-      ),
       /**
-       * why boundingBoxInTransformer is (0,0,w,h) ?
+       * why localBounds is (0,0,w,h) ?
        * 1. in transformer's local coordinate system, its top-left corner is always (0,0)
        * 2. all trnasformations (scale/rotate/move) are applied to the transformer itself, so in transformer's local coordinate system, the bounding box is always (0,0,w,h).
-       * so we can directly use (0,0,w,h) as boundingBoxInTransformer
+       * so we can directly use (0,0,w,h) as localBounds
        */
-      boundingBoxInTransformer: new Bounds(0, 0, this.w, this.h),
+      localBounds: new Bounds(0, 0, this.w, this.h),
       lastInWorld,
       lastInParent,
       lastInTransformer,
       currentInParent,
       currentInWorld,
       currentInTransformer,
-      pivotInWorld: this.toGlobal({
-        x: this.w / 2,
-        y: this.h / 2,
-      }),
-      pivotInParent: transformerParent.toLocal(
+      centerInParent: transformerParent.toLocal(
         {
           x: this.w / 2,
           y: this.h / 2,
