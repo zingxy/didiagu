@@ -27,7 +27,6 @@ export class HoverManager implements IEventHandler {
     // console.log('move', e.target);
     if (e.target instanceof AbstractPrimitive) {
       const primitive = e.target as AbstractPrimitive;
-      console.log('hover highlighter', primitive);
       if (!primitive) {
         return;
       }
