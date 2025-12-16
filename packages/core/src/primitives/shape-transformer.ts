@@ -148,7 +148,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'middle-right',
-    cursor: "ew-resize",
+    cursor: 'ew-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w, y: primitive.h / 2 };
     },
@@ -297,23 +297,13 @@ export class Transformer extends AbstractPrimitive {
   private dragging = false;
   private lastInWorld: IPoint | null = null;
   private activeHandle: Handler | null = null;
-  private overlay = new Rect({
-    fills: [{ type: 'SOLID', color: 'rgba(0,0,255,0.1)' }],
-    strokes: [{ type: 'SOLID', color: '#0000ff' }],
-    selectable: false,
-  });
   private sizeGraphic: Text;
   private editor: Editor;
   constructor(editor: Editor) {
     super();
-    // 确保事件可以触发
-    this.eventMode = 'dynamic';
-    this.interactive = true;
     this.editor = editor;
     this.sizeGraphic = new Text();
     this.addChild(this.sizeGraphic);
-    // this.addChild(this.overlay);
-
     this.on('pointerdown', this.onPointerdown);
     /**
      * 注意这里使用 globalpointermove 事件，而不是 pointermove，
@@ -387,10 +377,6 @@ export class Transformer extends AbstractPrimitive {
         h: height,
         rotation: rotation,
       });
-      this.overlay.updateAttrs({
-        w: width,
-        h: height,
-      });
     } else {
       const primitives = this.selectedPrimitives;
       let minX = Infinity;
@@ -415,10 +401,6 @@ export class Transformer extends AbstractPrimitive {
       this.updateAttrs({
         x,
         y,
-        w,
-        h,
-      });
-      this.overlay.updateAttrs({
         w,
         h,
       });
