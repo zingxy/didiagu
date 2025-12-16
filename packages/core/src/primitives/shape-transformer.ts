@@ -4,6 +4,7 @@ import {
   Bounds,
   Text,
   GraphicsContext,
+  Cursor,
 } from 'pixi.js';
 import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
@@ -31,6 +32,7 @@ interface IContext {
 }
 export interface IHandleConfig {
   handleType: HandleType;
+  cursor?: Cursor;
   getPosition(transformer: AbstractPrimitive): { x: number; y: number };
   onPointerdown?(context: Partial<IContext>): void;
   onPointermove?(context: IContext): void;
@@ -111,6 +113,7 @@ const cpSize = 20;
 export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-left',
+    cursor: 'nwse-resize',
     getPosition() {
       return { x: -0, y: -0 };
     },
@@ -122,6 +125,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'top-middle',
+    cursor: 'ns-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w / 2, y: 0 };
     },
@@ -132,6 +136,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'top-right',
+    cursor: 'nesw-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w, y: 0 };
     },
@@ -143,6 +148,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'middle-right',
+    cursor: "ew-resize",
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w, y: primitive.h / 2 };
     },
@@ -153,6 +159,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'bottom-right',
+    cursor: 'nwse-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w, y: primitive.h };
     },
@@ -164,6 +171,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'bottom-middle',
+    cursor: 'ns-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w / 2, y: primitive.h };
     },
@@ -174,6 +182,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'bottom-left',
+    cursor: 'nesw-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: 0, y: primitive.h };
     },
@@ -185,6 +194,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'middle-left',
+    cursor: 'ew-resize',
     getPosition(primitive: AbstractPrimitive) {
       return { x: 0, y: primitive.h / 2 };
     },
@@ -195,6 +205,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'rotate',
+    cursor: 'grab',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w / 2, y: -40 };
     },
@@ -221,6 +232,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   },
   {
     handleType: 'mover',
+    cursor: 'move',
     getPosition(primitive: AbstractPrimitive) {
       return { x: primitive.w / 2, y: primitive.h / 2 };
     },
@@ -249,6 +261,7 @@ export class Handler extends Ellipse {
       h: cpSize,
       selectable: false,
     });
+    this.cursor = handleConfig.cursor || 'pointer';
     this.deactivate = deactivate;
     this.activate = activate;
     this.handleConfig = handleConfig;
