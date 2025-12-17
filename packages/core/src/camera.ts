@@ -76,6 +76,10 @@ export class Camera implements IEventHandler {
     this.isPressing = false;
     this.last = null;
     const zoomFactor = e.deltaY > 0 ? 0.9 : 1.1;
+    const nextZoom = this.getZoom() * zoomFactor;
+    if (nextZoom < 0.5 || nextZoom > 10) {
+      return true; // 限制缩放范围
+    }
     const mouseX = e.global.x;
     const mouseY = e.global.y;
 
