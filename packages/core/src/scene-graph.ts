@@ -28,6 +28,8 @@ export class SceneGraph {
    * p_camera  = viewMatrix * p_world
    */
   private viewMatrix: Matrix = new Matrix(); // 感觉可以废弃，直接用
+  public bottom: PIXI.Container;
+  public top: PIXI.Container;
   /**
    * @description **逻辑**世界空间，区别于pixijs的world
    */
@@ -49,9 +51,17 @@ export class SceneGraph {
     this.editor = editor;
     this.bus = editor.bus;
     this.cameraSpace = root;
-    // 创建独立的场景容器，用于应用 camera 变换
-    this.scene = new PIXI.Container();
-    this.cameraSpace.addChild(this.scene);
+    /**
+     * 汉堡结构
+     * bottom -- scene -- top
+     * bottom: 用于放置网格等辅助元素
+     * scene: 用于放置实际图元, 受到相机变换的影响
+     * top: 用于放置悬浮在最上层的元素（如transformer ruler等）
+     */
+    this.bottom = new PIXI.Container({ zIndex: 1 });
+    this.scene = new PIXI.Container({ zIndex: 2 });
+    this.top = new PIXI.Container({ zIndex: 3 });
+    this.cameraSpace.addChild(this.scene, this.bottom, this.top);
 
     this.doc = new PIXI.Container();
     this.helperLayer = new PIXI.Container();

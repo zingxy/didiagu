@@ -9,6 +9,7 @@ import { ActionsManager } from './action-manager';
 import { TextEditor } from './text-editor';
 import { HoverManager } from './hoverManager';
 import { TransformerManager } from './transformer';
+import { Grid } from './grid';
 export interface EditorEvents {
   // Define editor-specific events here
   'editor.initialized': () => void;
@@ -27,7 +28,7 @@ const defaultEditorOptions: EditorOptions = {
 };
 
 export class Editor extends EventBus {
-  private readonly app: Application;
+  public readonly app: Application;
   public readonly bus: EventBus;
   public readonly camera: Camera;
   public readonly sceneGraph: SceneGraph;
@@ -38,6 +39,7 @@ export class Editor extends EventBus {
   public readonly textEditor: TextEditor;
   public readonly highlightManager: HoverManager;
   public readonly transformerManager: TransformerManager;
+  public grid?: Grid;
   options: EditorOptions;
   constructor(options: EditorOptions = defaultEditorOptions) {
     super();
@@ -51,7 +53,6 @@ export class Editor extends EventBus {
     this.textEditor = new TextEditor(this);
     this.highlightManager = new HoverManager(this);
     this.transformerManager = new TransformerManager(this);
-
     this.options = { ...defaultEditorOptions, ...options };
   }
 
@@ -63,6 +64,7 @@ export class Editor extends EventBus {
     this.app.stage.hitArea = this.app.screen;
 
     this.dispatcher = new Dispatcher(this.app.canvas, this.app.stage);
+    this.grid = new Grid(this);
     this.dispatcher.addHandler(
       this.highlightManager,
       this.textEditor,

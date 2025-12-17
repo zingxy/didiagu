@@ -8,7 +8,7 @@ export class TransformerManager {
   constructor(editor: Editor) {
     this.editor = editor;
     this.transformer = new Transformer(editor);
-    this.editor.sceneGraph.cameraSpace.addChild(this.transformer);
+    this.editor.sceneGraph.top.addChild(this.transformer);
     this.editor.on('selection.changed', this.updateTransformer);
     this.editor.on('camera.changed', () => {
       this.updateTransformer(Array.from(this.editor.selectionManager.selected));
