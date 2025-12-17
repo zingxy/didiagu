@@ -140,7 +140,7 @@ const ToolSelector: React.FC = () => {
 
 const Toolbar: React.FC = () => {
   return (
-    <div className="toolbar fixed w-screen top-4 flex justify-center pointer-events-none">
+    <div className="toolbar fixed w-screen top-9 flex justify-center pointer-events-none">
       <div className="min-w-1/4 h-12 rounded-xl shadow bg-white flex items-stretch pointer-events-auto">
         <div className="left flex-7 flex items-center justify-center">
           <ToolSelector />

@@ -104,7 +104,7 @@ export default function SceneTree() {
   return (
     <div
       className={clsx(
-        'fixed left-4 top-4 bg-white w-50 rounded-xl shadow h-8 min-h-12',
+        'fixed left-9 top-9 bg-white w-50 rounded-xl shadow h-8 min-h-12',
         {
           'h-9/10': showTree,
           'flex flex-col justify-center': !showTree,
