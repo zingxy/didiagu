@@ -94,7 +94,7 @@ export class Grid {
         ).x
       )}`;
       text.x = x;
-      text.y = offset - 5;
+      text.y = offset - 6;
       text.anchor = 0.5;
       text.rotation = 0;
     }
@@ -109,12 +109,12 @@ export class Grid {
           this.editor.sceneGraph.cameraSpace
         ).y
       )}`;
-      text.x = offset - 5;
+      text.x = offset - 6;
       text.y = y;
       text.anchor = 0.5;
-      text.rotation = 0;
+      text.rotation = -Math.PI / 2;
     }
-
+    const minorOffset = MAJOR_BAR_LENGTH - MINOR_TICK_LENGTH;
     if (gridSizeInCam >= 200) {
       const minorTickStep = gridSizeInCam / MINOR_TICK_COUNT;
       // 竖向 minor tick
@@ -126,8 +126,8 @@ export class Grid {
         for (let i = 1; i < MINOR_TICK_COUNT; i++) {
           const mx = x + i * minorTickStep;
           if (mx < bottomRightInCam.x) {
-            this.g.moveTo(mx, 0);
-            this.g.lineTo(mx, MINOR_TICK_LENGTH);
+            this.g.moveTo(mx, minorOffset);
+            this.g.lineTo(mx, MAJOR_BAR_LENGTH);
           }
         }
       }
@@ -166,5 +166,8 @@ export class Grid {
     for (; this.cursor < this.texts.length; this.cursor++) {
       this.texts[this.cursor].text = '';
     }
+    this.g
+      .rect(0, 0, MAJOR_BAR_LENGTH, MAJOR_BAR_LENGTH)
+      .fill({ color: '#ffffff' });
   }
 }
