@@ -64,7 +64,13 @@ export abstract class AbstractPrimitiveView<
 
     if (m) {
       this.setFromMatrix(m);
-      // this.updateLocalTransform();
+      // FIXME
+      /**
+       * 1: 这里为什么需要更新localTransform？
+       * 2. 似乎bounds wordTransform的计算会导致transformer在拖动过程中位置不正确
+       * 3. updateLocalTransform能解决这个问题
+       */
+      this.updateLocalTransform();
     }
     this.onModelUpdate();
   }

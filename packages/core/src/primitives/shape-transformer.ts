@@ -317,8 +317,6 @@ export class Transformer extends AbstractPrimitiveView {
     // FIXME
     /**
      * 1. 这里进行了节流处理，避免在拖动过程中频繁触发全局指针移动事件。
-     * 2. 似乎bounds wordTransform的计算会导致transformer在拖动过程中位置不正确,尤其是事件触发频率高时更明显, 这里采用16ms节流能缓解这个问题
-     * 3. updateLocalTransform也能解决这个问题
      */
     this.on('globalpointermove', throttle(this.onGlobalpointermove, 16));
     this.on('pointerup', this.onPointerup);
