@@ -6,7 +6,7 @@ import {
   GraphicsContext,
   Cursor,
 } from 'pixi.js';
-import { AbstractPrimitive, PrmitiveMap } from './abstract-primitive';
+import { AbstractPrimitive, PrimitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
 import { decompose, decomposePixi, normalizeRect } from '@didiagu/math';
@@ -290,7 +290,7 @@ export class Handler extends Ellipse {
  * @see {@link Transformer.applyTransform} to update selected primitives
  */
 export class Transformer extends AbstractPrimitive {
-  override readonly type = PrmitiveMap.Transformer;
+  override readonly type = PrimitiveMap.Transformer;
   private selectedPrimitives: AbstractPrimitive[] = [];
   // handles pool
   private handles = new Set<Handler>();

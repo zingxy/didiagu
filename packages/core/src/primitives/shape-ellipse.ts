@@ -1,10 +1,14 @@
 import { Graphics, GraphicsContext } from 'pixi.js';
-import { AbstractPrimitive, IEllipse, PrmitiveMap } from './abstract-primitive';
+import {
+  AbstractPrimitive,
+  IEllipse,
+  PrimitiveMap,
+} from './abstract-primitive';
 
 type IEllipseConfig = Partial<IEllipse>;
 
 export class Ellipse extends AbstractPrimitive implements IEllipse {
-  readonly type = PrmitiveMap.Ellipse;
+  readonly type = PrimitiveMap.Ellipse;
   constructor(config: IEllipseConfig) {
     super();
     Object.assign(this, config);

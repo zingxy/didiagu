@@ -4,7 +4,17 @@ import { BASE_INSPECTOR_SCHEMA, InspectorSchema } from './inspector';
 import { IPaint } from './style';
 import { IHandleConfig } from './shape-transformer';
 
-export const PrmitiveMap = {
+export type PrimitiveType =
+  | 'Rect'
+  | 'Ellipse'
+  | 'Frame'
+  | 'Layer'
+  | 'Transformer'
+  | 'Picture'
+  | 'Text'
+  | 'Line';
+
+export const PrimitiveMap: Record<PrimitiveType, PrimitiveType> = {
   Rect: 'Rect',
   Ellipse: 'Ellipse',
   Frame: 'Frame',
@@ -16,8 +26,6 @@ export const PrmitiveMap = {
 } as const;
 
 export const OUTLINE_COLOR = '#1890ff';
-
-export type PrimitiveType = (typeof PrmitiveMap)[keyof typeof PrmitiveMap];
 
 export interface ISize {
   w: number;
@@ -96,8 +104,6 @@ export interface IText extends IBasePrimitive {
   fontWeight: string;
 }
 
-export type IPrimitive = IEllipse | IRect | IFrame | IPicture;
-
 export abstract class AbstractPrimitive<
     T extends IBasePrimitive = IBasePrimitive
   >
@@ -120,8 +126,6 @@ export abstract class AbstractPrimitive<
   /**
    * 需要重新绘制的自定义属性
    */
-
-  private _drawScheduled = false;
 
   constructor(clip: boolean = false) {
     super();

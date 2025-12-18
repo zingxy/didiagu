@@ -1,10 +1,10 @@
 import * as PIXI from 'pixi.js';
-import { AbstractPrimitive, IText, PrmitiveMap } from './abstract-primitive';
+import { AbstractPrimitive, IText, PrimitiveMap } from './abstract-primitive';
 
 type ITextConfig = Partial<IText>;
 
 export class Text extends AbstractPrimitive<IText> implements IText {
-  readonly type = PrmitiveMap.Text;
+  readonly type = PrimitiveMap.Text;
   text: string = 'helloworld';
   textGraphics = new PIXI.Text();
   label: string = 'Text';
