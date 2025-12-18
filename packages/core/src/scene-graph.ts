@@ -35,10 +35,6 @@ export class SceneGraph {
    */
   public readonly scene: PIXI.Container;
   /**
-   * @description 空间索引
-   */
-  private readonly spatialIndex = new SpatialIndexManager(this);
-  /**
    * @description 图元映射表，通过id快速定位图元
    */
   private readonly primitiveMap: Map<string, AbstractPrimitiveView> = new Map();
