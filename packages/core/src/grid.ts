@@ -114,12 +114,8 @@ export class Grid {
     gridSizeInCam: number
   ) {
     // FIXME: 用screen.width 怎么少了一段长度
-    this.g
-      .moveTo(0, MAJOR_BAR_SIZE)
-      .lineTo(bottomRightInCam.x, MAJOR_BAR_SIZE);
-    this.g
-      .moveTo(MAJOR_BAR_SIZE, 0)
-      .lineTo(MAJOR_BAR_SIZE, bottomRightInCam.y);
+    this.g.moveTo(0, MAJOR_BAR_SIZE).lineTo(bottomRightInCam.x, MAJOR_BAR_SIZE);
+    this.g.moveTo(MAJOR_BAR_SIZE, 0).lineTo(MAJOR_BAR_SIZE, bottomRightInCam.y);
 
     const offset = MAJOR_BAR_SIZE - MAJOR_TICK_SIZE;
     for (let x = topleftInCam.x; x <= bottomRightInCam.x; x += gridSizeInCam) {
@@ -195,5 +191,10 @@ export class Grid {
     this.g
       .rect(0, 0, MAJOR_BAR_SIZE, MAJOR_BAR_SIZE)
       .fill({ color: '#ffffff' });
+  }
+  destroy() {
+    this.editor.off('camera.changed', this.onCameraChanged);
+    this.g.destroy();
+    this.texts.forEach((t) => t.destroy());
   }
 }
