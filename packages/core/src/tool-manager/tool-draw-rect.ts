@@ -1,4 +1,4 @@
-import { Rect } from '../primitives';
+import { createRect, Rect } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
 import { registerAction } from '../action-manager';
 
@@ -19,9 +19,7 @@ export class DrawRectTool extends AbstractDrawShapeTool {
   readonly desc = 'Draw Rectangle';
 
   override createShape() {
-    return new Rect({
-      strokes: [{ type: 'SOLID', color: '#000000', strokeWidth: 1 }],
-    });
+    return new Rect(createRect());
   }
 
   override finalizeShape(): void {

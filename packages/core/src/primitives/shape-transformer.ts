@@ -11,6 +11,7 @@ import { createEllipse, createTransformer, PrimitiveMap } from '..';
 import { IPoint } from '../tool-manager';
 import { decompose, decomposePixi, normalizeRect } from '@didiagu/math';
 import { Editor, Ellipse } from '..';
+import { throttle } from 'lodash';
 
 interface IContext {
   lastInWorld: IPoint;
@@ -282,8 +283,7 @@ export class Handler extends Ellipse {
     this.handleConfig.onPointerup?.(context);
   }
   buildPath(ctx: GraphicsContext): void {
-    this.x = this.model.x;
-    this.y = this.model.y;
+    this.setFromMatrix(this.model.transform);
     ctx.circle(0, 0, cpSize / 2);
   }
 }
@@ -313,12 +313,14 @@ export class Transformer extends AbstractPrimitiveView {
     this.sizeGraphic = new Text();
     this.addChild(this.sizeGraphic);
     this.on('pointerdown', this.onPointerdown);
+
+    // FIXME
     /**
-     * 注意这里使用 globalpointermove 事件，而不是 pointermove，
-     * 以确保在拖动过程中鼠标移出 Transformer 也能继续接收事件，获得更好的跟手效果
-     * 原因是 pointermove 事件在鼠标移出元素时不会触发，而 globalpointermove 则会持续触发
+     * 1. 这里进行了节流处理，避免在拖动过程中频繁触发全局指针移动事件。
+     * 2. 似乎bounds wordTransform的计算会导致transformer在拖动过程中位置不正确,尤其是事件触发频率高时更明显, 这里采用16ms节流能缓解这个问题
+     * 3. updateLocalTransform也能解决这个问题
      */
-    this.on('globalpointermove', this.onGlobalpointermove);
+    this.on('globalpointermove', throttle(this.onGlobalpointermove, 16));
     this.on('pointerup', this.onPointerup);
     this.on('pointerupoutside', this.onPointerup);
   }
@@ -374,8 +376,6 @@ export class Transformer extends AbstractPrimitiveView {
       // 计算出obb的左上角在transformer父坐标系中的位置
       // TODO 为什么直接计算出来的就是obb的左上角？
       const topLeft = r.apply({ x: minX, y: minY });
-      this.setFromMatrix(new Matrix());
-      this.updateLocalTransform();
       this.updateAttrs({
         x: topLeft.x,
         y: topLeft.y,
@@ -402,8 +402,6 @@ export class Transformer extends AbstractPrimitiveView {
       const y = minY;
       const w = maxX - minX;
       const h = maxY - minY;
-      this.setFromMatrix(new Matrix());
-      this.updateLocalTransform();
       this.updateAttrs({
         x,
         y,
@@ -423,7 +421,6 @@ export class Transformer extends AbstractPrimitiveView {
       this.addChild(handle);
       this.handles.add(handle);
     }
-    this.draw();
   }
 
   getContext(currentInWorld: IPoint): IContext {
@@ -442,7 +439,7 @@ export class Transformer extends AbstractPrimitiveView {
        * 2. all trnasformations (scale/rotate/move) are applied to the transformer itself, so in transformer's local coordinate system, the bounding box is always (0,0,w,h).
        * so we can directly use (0,0,w,h) as localBounds
        */
-      localBounds: new Bounds(0, 0, this.w, this.h),
+      localBounds: new Bounds(0, 0, this.model.width, this.model.height),
       lastInWorld,
       lastInParent,
       lastInTransformer,
@@ -451,8 +448,8 @@ export class Transformer extends AbstractPrimitiveView {
       currentInTransformer,
       centerInParent: transformerParent.toLocal(
         {
-          x: this.w / 2,
-          y: this.h / 2,
+          x: this.model.width / 2,
+          y: this.model.height / 2,
         },
         this
       ),
@@ -465,7 +462,6 @@ export class Transformer extends AbstractPrimitiveView {
   override draw(): void {
     super.draw();
     this.updateHandlerPositions();
-    this.updateSizeIndicator();
   }
   updateHandlerPositions() {
     this.handles.forEach((handle) => {
@@ -478,18 +474,6 @@ export class Transformer extends AbstractPrimitiveView {
     });
   }
 
-  updateSizeIndicator() {
-    const zoom = this.editor.camera.getZoom();
-    this.sizeGraphic.text = `${Math.round(this.w / zoom)} x ${Math.round(
-      this.h / zoom
-    )}`;
-    this.sizeGraphic.style.fontSize = 12;
-    this.sizeGraphic.style.fontFamily = 'Arial';
-    this.sizeGraphic.style.fontWeight = '400';
-    this.sizeGraphic.style.fill = 0x000000;
-    this.sizeGraphic.x = this.w / 2 - this.sizeGraphic.width / 2;
-    this.sizeGraphic.y = this.h + cpSize;
-  }
   onPointerdown = (event: FederatedPointerEvent) => {
     event.stopPropagation();
     this.dragging = true;
@@ -514,23 +498,19 @@ export class Transformer extends AbstractPrimitiveView {
     this.lastInWorld = null;
   };
   apply(primitive: AbstractPrimitiveView, m: Matrix) {
-    // primitive.setFromMatrix(m);
-    // primitive.updateLocalTransform();
-
     primitive.updateAttrs({
       transform: m.clone(),
     });
-    return;
     // FIXME 使用下面的方法在移动过程中会导致图形和transformer不同步
     // 尤其是transformer带有strokes时更明显
-    const { x, y, rotation, skewX, skewY, scaleX, scaleY } = decomposePixi(m);
-    primitive.rotation = rotation;
-    primitive.skew.x = skewX;
-    primitive.skew.y = skewY;
-    primitive.scale.set(1, 1);
-    primitive.updateAttrs({
-      ...normalizeRect(x, y, primitive.w * scaleX, primitive.h * scaleY),
-    }); // 触发重绘
+    // const { x, y, rotation, skewX, skewY, scaleX, scaleY } = decomposePixi(m);
+    // primitive.rotation = rotation;
+    // primitive.skew.x = skewX;
+    // primitive.skew.y = skewY;
+    // primitive.scale.set(1, 1);
+    // primitive.updateAttrs({
+    //   ...normalizeRect(x, y, primitive.w * scaleX, primitive.h * scaleY),
+    // }); // 触发重绘
   }
 
   applyTransform = (delta: Matrix) => {

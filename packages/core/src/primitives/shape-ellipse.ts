@@ -11,9 +11,7 @@ export class Ellipse extends AbstractPrimitiveView<IEllipse> {
   }
 
   override buildPath(ctx: GraphicsContext): void {
-    const { x, y, width, height } = this.model;
-    this.x = x;
-    this.y = y;
+    const { width, height } = this.model;
     ctx.ellipse(width / 2, height / 2, width / 2, height / 2);
   }
 }

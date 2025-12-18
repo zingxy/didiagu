@@ -103,6 +103,7 @@ abstract class AbstractDrawShapeTool implements ITool {
 
     // 如果用户只是点击（没有拖拽），设置默认宽高为 100 * 100
     if (!this.dragging) {
+      console.log('click detected, set default size 100x100');
       this.drawingShape.updateAttrs({
         width: 100,
         height: 100,

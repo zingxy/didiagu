@@ -38,8 +38,6 @@ export interface IPrimitive {
   label: string;
 
   // geo
-  x: number;
-  y: number;
   width: number;
   height: number;
   // transform matrix
@@ -49,6 +47,25 @@ export interface IPrimitive {
   fills: IPaint[];
   strokes: IPaint[];
 }
+
+export interface ITranformable {
+  x: number;
+  y: number;
+  scaleX: number;
+  scaleY: number;
+  rotation: number;
+  skewX: number;
+  skewY: number;
+}
+export const TRANFORMER_PROPS: (keyof ITranformable)[] = [
+  'x',
+  'y',
+  'scaleX',
+  'scaleY',
+  'rotation',
+  'skewX',
+  'skewY',
+];
 
 export interface IRect extends IPrimitive {
   type: 'Rect';
@@ -89,10 +106,8 @@ function createBase(attr: Partial<IPrimitive>): IPrimitive {
     label: 'Text',
     width: 0,
     height: 0,
-    x: 0,
-    y: 0,
-    transform: new Matrix(),
-    fills: [],
+    transform: new Matrix().identity(),
+    fills: [{ type: 'SOLID', color: '#FFFFFF' }],
     strokes: [],
     ...attr,
   };

@@ -1,4 +1,4 @@
-import { Frame } from '../primitives';
+import { createFrame, Frame } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
 import { registerAction } from '../action-manager';
 registerAction({
@@ -18,9 +18,7 @@ export class DrawFrameTool extends AbstractDrawShapeTool {
   readonly desc = 'Draw Frame';
 
   override createShape() {
-    return new Frame({
-      fills: [{ type: 'SOLID', color: '#ffffff' }],
-    });
+    return new Frame(createFrame());
   }
 
   override finalizeShape(): void {

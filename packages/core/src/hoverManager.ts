@@ -30,10 +30,10 @@ export class HoverManager implements IEventHandler {
       if (!primitive) {
         return;
       }
-      if (this.currentPrimitiveId === primitive.uuid) {
+      if (this.currentPrimitiveId === primitive.model.uuid) {
         return;
       }
-      this.currentPrimitiveId = primitive.uuid;
+      this.currentPrimitiveId = primitive.model.uuid;
       this.currentPrimitive = primitive;
 
       this.stroke();

@@ -1,4 +1,4 @@
-import { Ellipse } from '../primitives';
+import { createEllipse, Ellipse } from '../primitives';
 import { AbstractDrawShapeTool } from './tool-draw-shape';
 import { registerAction } from '../action-manager';
 registerAction({
@@ -18,9 +18,7 @@ export class DrawEllipseTool extends AbstractDrawShapeTool {
   readonly desc = 'Draw Ellipse';
 
   override createShape() {
-    return new Ellipse({
-      strokes: [{ type: 'SOLID', color: '#000000', strokeWidth: 1 }],
-    });
+    return new Ellipse(createEllipse());
   }
 
   override finalizeShape(): void {
