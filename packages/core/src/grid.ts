@@ -3,6 +3,12 @@ import * as PIXI from 'pixi.js';
 
 const GRID_SIZE = 100;
 
+const MAJOR_TICK_SIZE = 10;
+const MAJOR_BAR_SIZE = 32;
+const MINOR_TICK_COUNT = 5;
+const MINOR_TICK_SIZE = 5;
+const TICK_COLOR = 'red ';
+
 export class Grid {
   private editor: Editor;
   private g: PIXI.Graphics = new PIXI.Graphics();
@@ -67,24 +73,58 @@ export class Grid {
       this.editor.sceneGraph.scene
     );
 
-    const MAJOR_TICK_LENGTH = 10;
-    const MAJOR_BAR_LENGTH = 32;
-    const MINOR_TICK_COUNT = 5;
-    const MINOR_TICK_LENGTH = 5;
-    const TICK_COLOR = 'red ';
-
     this.g.clear();
+    this.drawGrid(
+      topleftInCam,
+      bottomRightInCam,
+      sceneOriginInCam,
+      gridSizeInCam
+    );
+    this.drawRuler(
+      topleftInCam,
+      bottomRightInCam,
+      sceneOriginInCam,
+      gridSizeInCam
+    );
+  }
+
+  drawGrid(
+    topleftInCam: PIXI.Point,
+    bottomRightInCam: PIXI.Point,
+    sceneOriginInCam: PIXI.Point,
+    gridSizeInCam: number
+  ) {
+    // 交点圆
+    for (let x = topleftInCam.x; x <= bottomRightInCam.x; x += gridSizeInCam) {
+      for (
+        let y = topleftInCam.y;
+        y <= bottomRightInCam.y;
+        y += gridSizeInCam
+      ) {
+        this.g.circle(x, y, 3);
+      }
+    }
+    this.g.circle(sceneOriginInCam.x, sceneOriginInCam.y, 10);
+    this.g.fill({ width: 2, color: '#c4c4c4' });
+  }
+  drawRuler(
+    topleftInCam: PIXI.Point,
+    bottomRightInCam: PIXI.Point,
+    sceneOriginInCam: PIXI.Point,
+    gridSizeInCam: number
+  ) {
     // FIXME: 用screen.width 怎么少了一段长度
     this.g
-      .moveTo(0, MAJOR_BAR_LENGTH)
-      .lineTo(bottomRightInCam.x, MAJOR_BAR_LENGTH);
+      .moveTo(0, MAJOR_BAR_SIZE)
+      .lineTo(bottomRightInCam.x, MAJOR_BAR_SIZE);
     this.g
-      .moveTo(MAJOR_BAR_LENGTH, 0)
-      .lineTo(MAJOR_BAR_LENGTH, bottomRightInCam.y);
-    const offset = MAJOR_BAR_LENGTH - MAJOR_TICK_LENGTH;
+      .moveTo(MAJOR_BAR_SIZE, 0)
+      .lineTo(MAJOR_BAR_SIZE, bottomRightInCam.y);
+
+    const offset = MAJOR_BAR_SIZE - MAJOR_TICK_SIZE;
     for (let x = topleftInCam.x; x <= bottomRightInCam.x; x += gridSizeInCam) {
       this.g.moveTo(x, offset);
-      this.g.lineTo(x, MAJOR_BAR_LENGTH);
+      this.g.lineTo(x, MAJOR_BAR_SIZE);
 
       const text = this.getText();
       text.text = `${Math.round(
@@ -101,7 +141,7 @@ export class Grid {
 
     for (let y = topleftInCam.y; y <= bottomRightInCam.y; y += gridSizeInCam) {
       this.g.moveTo(offset, y);
-      this.g.lineTo(MAJOR_BAR_LENGTH, y);
+      this.g.lineTo(MAJOR_BAR_SIZE, y);
       const text = this.getText();
       text.text = `${Math.round(
         this.editor.sceneGraph.scene.toLocal(
@@ -114,7 +154,7 @@ export class Grid {
       text.anchor = 0.5;
       text.rotation = -Math.PI / 2;
     }
-    const minorOffset = MAJOR_BAR_LENGTH - MINOR_TICK_LENGTH;
+    const minorOffset = MAJOR_BAR_SIZE - MINOR_TICK_SIZE;
     if (gridSizeInCam >= 200) {
       const minorTickStep = gridSizeInCam / MINOR_TICK_COUNT;
       // 竖向 minor tick
@@ -127,7 +167,7 @@ export class Grid {
           const mx = x + i * minorTickStep;
           if (mx < bottomRightInCam.x) {
             this.g.moveTo(mx, minorOffset);
-            this.g.lineTo(mx, MAJOR_BAR_LENGTH);
+            this.g.lineTo(mx, MAJOR_BAR_SIZE);
           }
         }
       }
@@ -141,7 +181,7 @@ export class Grid {
           const my = y + i * minorTickStep;
           if (my < bottomRightInCam.y) {
             this.g.moveTo(0, my);
-            this.g.lineTo(MINOR_TICK_LENGTH, my);
+            this.g.lineTo(MINOR_TICK_SIZE, my);
           }
         }
       }
@@ -149,25 +189,11 @@ export class Grid {
 
     this.g.stroke({ width: 1, color: TICK_COLOR });
 
-    // 交点圆
-    for (let x = topleftInCam.x; x <= bottomRightInCam.x; x += gridSizeInCam) {
-      for (
-        let y = topleftInCam.y;
-        y <= bottomRightInCam.y;
-        y += gridSizeInCam
-      ) {
-        this.g.circle(x, y, 3);
-      }
-    }
-    this.g.circle(sceneOriginInCam.x, sceneOriginInCam.y, 10);
-    this.g.stroke({ width: 2, color: '#c4c4c4' });
-    this.g.fill({ width: 2, color: '#c4c4c4' });
-
     for (; this.cursor < this.texts.length; this.cursor++) {
       this.texts[this.cursor].text = '';
     }
     this.g
-      .rect(0, 0, MAJOR_BAR_LENGTH, MAJOR_BAR_LENGTH)
+      .rect(0, 0, MAJOR_BAR_SIZE, MAJOR_BAR_SIZE)
       .fill({ color: '#ffffff' });
   }
 }
