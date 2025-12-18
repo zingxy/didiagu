@@ -1,4 +1,5 @@
-import { AbstractPrimitiveView, PrimitiveMap } from './abstract-primitive';
+import { AbstractPrimitiveView } from './abstract-primitive';
+import { PrimitiveMap } from './primitive';
 
 export interface LayerConfig {
   /** 图层 ID */

@@ -6,8 +6,8 @@ import {
   GraphicsContext,
   Cursor,
 } from 'pixi.js';
-import { AbstractPrimitiveView, PrimitiveMap } from './abstract-primitive';
-import { Rect } from './shape-rect';
+import { AbstractPrimitiveView } from './abstract-primitive';
+import { createEllipse, createTransformer, PrimitiveMap } from '..';
 import { IPoint } from '../tool-manager';
 import { decompose, decomposePixi, normalizeRect } from '@didiagu/math';
 import { Editor, Ellipse } from '..';
@@ -127,7 +127,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'top-middle',
     cursor: 'ns-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w / 2, y: 0 };
+      return { x: primitive.model.width / 2, y: 0 };
     },
     onPointermove: createScaleHandler({
       getScaleY: (dy, h) => (h - dy) / h,
@@ -138,7 +138,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'top-right',
     cursor: 'nesw-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w, y: 0 };
+      return { x: primitive.model.width, y: 0 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w + dx) / w,
@@ -150,7 +150,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'middle-right',
     cursor: 'ew-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w, y: primitive.h / 2 };
+      return { x: primitive.model.width, y: primitive.model.height / 2 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w + dx) / w,
@@ -161,7 +161,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'bottom-right',
     cursor: 'nwse-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w, y: primitive.h };
+      return { x: primitive.model.width, y: primitive.model.height };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w + dx) / w,
@@ -173,7 +173,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'bottom-middle',
     cursor: 'ns-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w / 2, y: primitive.h };
+      return { x: primitive.model.width / 2, y: primitive.model.height };
     },
     onPointermove: createScaleHandler({
       getScaleY: (dy, h) => (h + dy) / h,
@@ -184,7 +184,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'bottom-left',
     cursor: 'nesw-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: 0, y: primitive.h };
+      return { x: 0, y: primitive.model.height };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w - dx) / w,
@@ -196,7 +196,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'middle-left',
     cursor: 'ew-resize',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: 0, y: primitive.h / 2 };
+      return { x: 0, y: primitive.model.height / 2 };
     },
     onPointermove: createScaleHandler({
       getScaleX: (dx, w) => (w - dx) / w,
@@ -207,7 +207,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'rotate',
     cursor: 'grab',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w / 2, y: -40 };
+      return { x: primitive.model.width / 2, y: -40 };
     },
     onPointermove(context) {
       const { centerInParent, currentInParent, lastInParent } = context;
@@ -234,7 +234,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
     handleType: 'mover',
     cursor: 'move',
     getPosition(primitive: AbstractPrimitiveView) {
-      return { x: primitive.w / 2, y: primitive.h / 2 };
+      return { x: primitive.model.width / 2, y: primitive.model.height / 2 };
     },
     onPointermove(context) {
       const { lastInParent, currentInParent } = context;
@@ -255,12 +255,13 @@ export class Handler extends Ellipse {
     activate: (handle: Handler) => void,
     deactivate: () => void
   ) {
-    super({
-      fills: [{ type: 'SOLID', color: '#ff0000' }],
-      w: cpSize,
-      h: cpSize,
-      selectable: false,
-    });
+    super(
+      createEllipse({
+        fills: [{ type: 'SOLID', color: '#ff0000' }],
+        width: cpSize,
+        height: cpSize,
+      })
+    );
     this.cursor = handleConfig.cursor || 'pointer';
     this.deactivate = deactivate;
     this.activate = activate;
@@ -281,7 +282,9 @@ export class Handler extends Ellipse {
     this.handleConfig.onPointerup?.(context);
   }
   buildPath(ctx: GraphicsContext): void {
-    ctx.circle(this.x, this.y, cpSize / 2);
+    this.x = this.model.x;
+    this.y = this.model.y;
+    ctx.circle(0, 0, cpSize / 2);
   }
 }
 
@@ -300,7 +303,12 @@ export class Transformer extends AbstractPrimitiveView {
   private sizeGraphic: Text;
   private editor: Editor;
   constructor(editor: Editor) {
-    super();
+    super(
+      createTransformer({
+        fills: [],
+        strokes: [{ type: 'SOLID', color: '#0000ff', strokeWidth: 1 }],
+      })
+    );
     this.editor = editor;
     this.sizeGraphic = new Text();
     this.addChild(this.sizeGraphic);
@@ -319,7 +327,7 @@ export class Transformer extends AbstractPrimitiveView {
   }
   update(selected: AbstractPrimitiveView[]) {
     this.selectedPrimitives = selected;
-    let handleConfigs: IHandleConfig[] = defaultHandleConfigs;
+    const handleConfigs: IHandleConfig[] = defaultHandleConfigs;
     if (this.selectedPrimitives.length === 0) {
       this.visible = false;
       return;
@@ -329,15 +337,13 @@ export class Transformer extends AbstractPrimitiveView {
     if (this.selectedPrimitives.length === 1) {
       // 计算primitive四个角点在transformer父坐标系中的位置
       const primitive = this.selectedPrimitives[0];
-      if (primitive.controlPoints.length > 0) {
-        handleConfigs = primitive.controlPoints;
-      }
       const corners = [
         { x: 0, y: 0 },
-        { x: primitive.w, y: 0 },
-        { x: primitive.w, y: primitive.h },
-        { x: 0, y: primitive.h },
+        { x: primitive.model.width, y: 0 },
+        { x: primitive.model.width, y: primitive.model.height },
+        { x: 0, y: primitive.model.height },
       ];
+      console.log('corners:', corners);
 
       // 转换到transformer父坐标系
       const cornersInTransformerParent = corners.map((corner) => {
@@ -373,8 +379,8 @@ export class Transformer extends AbstractPrimitiveView {
       this.updateAttrs({
         x: topLeft.x,
         y: topLeft.y,
-        w: width,
-        h: height,
+        width,
+        height,
         rotation: rotation,
       });
     } else {
@@ -401,14 +407,11 @@ export class Transformer extends AbstractPrimitiveView {
       this.updateAttrs({
         x,
         y,
-        w,
-        h,
+        width: w,
+        height: h,
       });
     }
     const handlesArray = Array.from(this.handles.values());
-    handlesArray.forEach((handle) => {
-      handle.visible = false;
-    });
     for (let i = 0; i < handleConfigs.length; i++) {
       const handleConfig = handleConfigs[i];
       const handle =
@@ -460,6 +463,7 @@ export class Transformer extends AbstractPrimitiveView {
   }
 
   override draw(): void {
+    super.draw();
     this.updateHandlerPositions();
     this.updateSizeIndicator();
   }
@@ -510,8 +514,12 @@ export class Transformer extends AbstractPrimitiveView {
     this.lastInWorld = null;
   };
   apply(primitive: AbstractPrimitiveView, m: Matrix) {
-    primitive.setFromMatrix(m);
-    primitive.updateLocalTransform();
+    // primitive.setFromMatrix(m);
+    // primitive.updateLocalTransform();
+
+    primitive.updateAttrs({
+      transform: m.clone(),
+    });
     return;
     // FIXME 使用下面的方法在移动过程中会导致图形和transformer不同步
     // 尤其是transformer带有strokes时更明显

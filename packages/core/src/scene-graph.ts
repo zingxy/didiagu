@@ -9,8 +9,7 @@
 import { isIntersect, Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
-import { AbstractPrimitiveView, Line } from './primitives';
-import { SpatialIndexManager } from './spatial-index-manager';
+import { AbstractPrimitiveView, IPrimitive, Line } from './primitives';
 import { Text } from './primitives/shape-text';
 
 export interface SceneGraphEvents {
@@ -43,6 +42,7 @@ export class SceneGraph {
   public doc: PIXI.Container<AbstractPrimitiveView>;
   /**辅助层 */
   public helperLayer: PIXI.Container;
+  private store:IPrimitive[] = [];
   constructor(editor: Editor, root: PIXI.Container) {
     this.editor = editor;
     this.bus = editor.bus;

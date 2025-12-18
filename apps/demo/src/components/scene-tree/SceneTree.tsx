@@ -71,7 +71,7 @@ export default function SceneTree() {
   const [, forceUpdate] = useReducer((x) => x + 1, 0);
   const editor = useAppState((state) => state.editor);
   const selection = useAppState((state) => state.selection);
-  const selectedKeys = selection.map((item) => item.uuid);
+  const selectedKeys = selection.map((item) => item.model.uuid);
   useEffect(() => {
     if (!editor) return;
     const onDescendantChanged = () => {
@@ -85,10 +85,10 @@ export default function SceneTree() {
 
   const expandKeys = ['root'];
   const data = editor?.sceneGraph.mapDoc<TreeDataNode>((node) => {
-    expandKeys.push(node.uuid);
+    expandKeys.push(node.model.uuid);
     return {
       icon: SHAPE_MAP[node.type].icon,
-      key: node.uuid,
+      key: node.model.uuid,
       title: node.type,
       isLeaf: node.isLeaf(),
       // children: [], // 会被 map 方法自动填充

@@ -1,16 +1,11 @@
-import {
-  AbstractPrimitiveView,
-  IFrame,
-  PrimitiveMap,
-} from './abstract-primitive';
+import { AbstractPrimitiveView } from './abstract-primitive';
+import { IFrame, PrimitiveMap } from './primitive';
 
-type IFrameConfig = Partial<IFrame>;
-
-export class Frame extends AbstractPrimitiveView implements IFrame {
-  readonly type = PrimitiveMap.Frame;
-  constructor(config: IFrameConfig) {
-    super(true);
-    Object.assign(this, config);
+export class Frame extends AbstractPrimitiveView<IFrame> {
+  readonly type = PrimitiveMap.Frame as 'Frame';
+  constructor(model: IFrame) {
+    super(model);
+    Object.assign(this, model);
     this.draw();
   }
   override isLeaf(): boolean {

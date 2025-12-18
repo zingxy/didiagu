@@ -9,7 +9,13 @@ export class TransformerManager {
     this.editor = editor;
     this.transformer = new Transformer(editor);
     this.editor.sceneGraph.top.addChild(this.transformer);
-    this.editor.on('selection.changed', this.updateTransformer);
+    this.editor.on('selection.changed', (arr) => {
+      console.log(
+        '选区变化:',
+        Array.from(this.editor.selectionManager.selected)
+      );
+      this.updateTransformer(arr);
+    });
     this.editor.on('camera.changed', () => {
       this.updateTransformer(Array.from(this.editor.selectionManager.selected));
     });

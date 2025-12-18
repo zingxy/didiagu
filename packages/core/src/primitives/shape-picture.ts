@@ -1,8 +1,5 @@
-import {
-  AbstractPrimitiveView,
-  IPicture,
-  PrimitiveMap,
-} from './abstract-primitive';
+import { AbstractPrimitiveView } from './abstract-primitive';
+import { IPicture, PrimitiveMap } from './primitive';
 import * as PIXI from 'pixi.js';
 
 type IPictureConfig = Partial<IPicture>;
@@ -11,7 +8,7 @@ export class Picture
   extends AbstractPrimitiveView<IPicture>
   implements IPicture
 {
-  readonly type = PrimitiveMap.Picture;
+  readonly type = PrimitiveMap.Picture as 'Picture';
   src: string = '';
   texture: PIXI.Texture | null = null;
   picture: PIXI.Sprite;

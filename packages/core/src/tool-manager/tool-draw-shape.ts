@@ -35,8 +35,8 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.drawingShape.updateAttrs({
       x: localPos.x,
       y: localPos.y,
-      w: 0,
-      h: 0,
+      width: 0,
+      height: 0,
     });
   }
 
@@ -104,8 +104,8 @@ abstract class AbstractDrawShapeTool implements ITool {
     // 如果用户只是点击（没有拖拽），设置默认宽高为 100 * 100
     if (!this.dragging) {
       this.drawingShape.updateAttrs({
-        w: 100,
-        h: 100,
+        width: 100,
+        height: 100,
       });
     }
 
@@ -123,8 +123,12 @@ abstract class AbstractDrawShapeTool implements ITool {
   /** 更新图形属性 */
   updateShape(start: IPoint, end: IPoint, w: number, h: number) {
     if (!this.drawingShape) return;
+    const { x, y, w: width, h: height } = normalizeRect(start.x, start.y, w, h);
     this.drawingShape.updateAttrs({
-      ...normalizeRect(start.x, start.y, w, h),
+      x,
+      y,
+      width,
+      height,
     });
   }
   /** 完成图形 */

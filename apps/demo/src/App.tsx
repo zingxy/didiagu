@@ -1,10 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Editor } from '@didiagu/core';
-import { Splitter } from 'antd';
 import Toolbar from '@components/toolbar';
 import { useAppState } from '@/store';
 import SceneTree from '@components/scene-tree/SceneTree';
-import Inspector from '@components/inspector/Inspector';
 import { CommandPalette } from '@components/command-palette';
 import { ContextMenu } from '@components/context-menu';
 function App() {
@@ -59,7 +57,6 @@ function App() {
         <ContextMenu>
           <div ref={containerRef} className="w-full h-full" />
         </ContextMenu>
-        <Inspector />
         <Toolbar />
         <CommandPalette />
       </div>

@@ -1,6 +1,6 @@
 import { DidiaguPointerEvent } from '../dispatcher';
 import { Editor } from '../editor';
-import { Rect } from '../primitives';
+import { createRect, Rect } from '../primitives';
 import type { ITool } from './types';
 import { registerAction } from '../action-manager';
 
@@ -24,14 +24,12 @@ export class SelectTool implements ITool {
   private pressed: boolean = false;
   constructor(editor: Editor) {
     this.editor = editor;
-    this.selectBox = new Rect({
-      x: 0,
-      y: 0,
-      w: 0,
-      h: 0,
-      strokes: [{ type: 'SOLID', color: '#3399FF' }],
-      fills: [{ type: 'SOLID', color: 'rgba(51,153,255,0.2)' }],
-    });
+    this.selectBox = new Rect(
+      createRect({
+        strokes: [{ type: 'SOLID', color: '#3399FF' }],
+        fills: [{ type: 'SOLID', color: 'rgba(51,153,255,0.2)' }],
+      })
+    );
 
     this.editor.sceneGraph.helperLayer.addChild(this.selectBox);
   }
@@ -46,8 +44,6 @@ export class SelectTool implements ITool {
     this.selectBox.updateAttrs({
       x: stagePos.x,
       y: stagePos.y,
-      w: 0,
-      h: 0,
     });
     this.pressed = true;
     return true;
@@ -68,13 +64,14 @@ export class SelectTool implements ITool {
     this.selectBox.updateAttrs({
       x: rectX,
       y: rectY,
-      w: rectW,
-      h: rectH,
+      width: rectW,
+      height: rectH,
     });
 
     const primitives = this.editor.sceneGraph.getPrimiveByBounds(
       this.editor.sceneGraph.getSceneBounds(this.selectBox)
     );
+    console.log('框选到图元:', primitives);
     this.editor.selectionManager.deselectAll();
     this.editor.selectionManager.select(primitives);
 
@@ -90,6 +87,6 @@ export class SelectTool implements ITool {
     this.editor.selectionManager.deselectAll();
     this.editor.selectionManager.select(primitives);
     this.pressed = false;
-    this.selectBox.updateAttrs({ w: 0, h: 0 });
+    this.selectBox.updateAttrs({ width: 0, height: 0 });
   }
 }

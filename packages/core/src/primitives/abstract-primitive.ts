@@ -1,225 +1,44 @@
 import { Graphics, Container, GraphicsContext } from 'pixi.js';
-import { nanoid } from 'nanoid';
 import { BASE_INSPECTOR_SCHEMA, InspectorSchema } from './inspector';
-import { IPaint } from './style';
-import { IHandleConfig } from './shape-transformer';
-
-export type PrimitiveType =
-  | 'Rect'
-  | 'Ellipse'
-  | 'Frame'
-  | 'Layer'
-  | 'Transformer'
-  | 'Picture'
-  | 'Text'
-  | 'Line';
-
-export const PrimitiveMap: Record<PrimitiveType, PrimitiveType> = {
-  Rect: 'Rect',
-  Ellipse: 'Ellipse',
-  Frame: 'Frame',
-  Layer: 'Layer',
-  Transformer: 'Transformer',
-  Picture: 'Picture',
-  Text: 'Text',
-  Line: 'Line',
-} as const;
+import { IPrimitive, PrimitiveType } from '..';
 
 export const OUTLINE_COLOR = '#1890ff';
 
-export interface ISize {
-  w: number;
-  h: number;
-}
-export interface ITransform {
-  x: number;
-  y: number;
-  rotation: number;
-  skewX: number;
-  skewY: number;
-  scaleX: number;
-  scaleY: number;
-}
-
-export interface IStyle {
-  fills: IPaint[];
-  strokes: IPaint[];
-}
-
-export const SIZE_PROPS = ['w', 'h'];
-
-export const TRANSFORM_PROPS = [
-  'x',
-  'y',
-  'rotation',
-  'skewX',
-  'skewY',
-  'scaleX',
-  'scaleY',
-];
-
-export const STYLE_PROPS = ['fills', 'strokes'];
-
-export interface IBasePrimitive extends ISize, ITransform, IStyle {
-  // uuid, 对象的唯一id
-  readonly uuid: string;
-  // 节点类型
-  readonly type: PrimitiveType;
-  // 名称
-  label: string;
-  // 是否可选中
-  selectable: boolean;
-  controlPoints: IHandleConfig[];
-}
-
-export interface IRect extends IBasePrimitive {
-  type: 'Rect';
-}
-
-export interface IEllipse extends IBasePrimitive {
-  type: 'Ellipse';
-}
-
-export interface IFrame extends IBasePrimitive {
-  type: 'Frame';
-}
-export interface ILine extends IBasePrimitive {
-  type: 'Line';
-  x1: number;
-  y1: number;
-  x2: number;
-  y2: number;
-}
-
-export interface IPicture extends IBasePrimitive {
-  type: 'Picture';
-  src: string;
-  scaleMode?: 'FILL' | 'FIT' | 'STRETCH';
-}
-export interface IText extends IBasePrimitive {
-  type: 'Text';
-  text: string;
-  fontSize: number;
-  fontFamily: string;
-  fontWeight: string;
-}
-
 export abstract class AbstractPrimitiveView<
-    T extends IBasePrimitive = IBasePrimitive
-  >
-  extends Container
-  implements IBasePrimitive
-{
+  T extends IPrimitive = IPrimitive
+> extends Container {
   abstract readonly type: PrimitiveType;
-  uuid: string;
-  w = 0;
-  h = 0;
-  fills: IPaint[] = [];
-  strokes: IPaint[] = [];
   selectable = true;
-  controlPoints: IHandleConfig[] = [];
-
   graphics: Graphics;
-  clipGraphics?: Graphics;
-  clip: boolean = false;
+  model: T;
 
   /**
    * 需要重新绘制的自定义属性
    */
 
-  constructor(clip: boolean = false) {
+  constructor(model: T) {
     super();
-    this.uuid = nanoid();
     this.eventMode = 'dynamic';
     this.interactive = true;
-    this.clip = clip;
-
+    this.model = model;
     this.graphics = new Graphics();
-    if (this.clip) {
-      this.clipGraphics = new Graphics(this.graphics.context);
-      this.addChild(this.clipGraphics);
-      this.mask = this.clipGraphics;
-    }
-
     this.addChild(this.graphics);
+    // this.draw();
   }
 
-  get scaleX() {
-    return this.scale.x;
-  }
-  set scaleX(value: number) {
-    this.scale.x = value;
+  updateAttrs(patch: Partial<T>) {
+    Object.assign(this.model, patch);
+    this.onModelUpdate(patch);
   }
 
-  get scaleY() {
-    return this.scale.y;
-  }
-  set scaleY(value: number) {
-    this.scale.y = value;
-  }
-
-  get skewX() {
-    return this.skew.x;
-  }
-  set skewX(value: number) {
-    this.skew.x = value;
-  }
-
-  get skewY() {
-    return this.skew.y;
-  }
-  set skewY(value: number) {
-    this.skew.y = value;
-  }
-
-  /**
-   * @description 当这些属性变化时需要重新绘制
-   * @returns
-   */
-  protected getVisualAttrNames() {
-    return [...SIZE_PROPS, ...STYLE_PROPS];
-  }
-
-  /**
-   * 更新属性
-   */
-  updateAttrs(attrs: Partial<T>) {
-    const changed: string[] = [];
-    let hasSizeChange = false;
-    let hasStyleChange = false;
-    let visualChange = false;
-    for (const key in attrs) {
-      if (this[key as keyof this] !== attrs[key]) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (this as any)[key] = attrs[key];
-        changed.push(key);
-
-        if (SIZE_PROPS.includes(key)) {
-          hasSizeChange = true;
-        }
-        if (STYLE_PROPS.includes(key)) {
-          hasStyleChange = true;
-        }
-        if (this.getVisualAttrNames().includes(key)) {
-          visualChange = true;
-        }
-      }
+  onModelUpdate(patch: Partial<T>) {
+    if (patch.transform) {
+      console.log('更新图元变换矩阵:', patch.transform);
+      this.setFromMatrix(patch.transform);
+      this.updateLocalTransform()
     }
-
-    if (changed.length > 0) {
-      this.emit('attr.changed', attrs);
-    }
-    if (hasSizeChange) {
-      this.emit('size.changed', { attrs });
-    }
-    if (hasStyleChange) {
-      this.emit('style.changed', { attrs });
-    }
-    if (visualChange) {
-      this.draw();
-    }
+    this.draw();
   }
-
   /**
    * @description 绘制图形路径, 不应该被外部调用
    */
@@ -230,15 +49,12 @@ export abstract class AbstractPrimitiveView<
   }
 
   public buildPath(ctx: GraphicsContext): void {
-    ctx.rect(0, 0, this.w, this.h);
+    const { x, y, width, height } = this.model;
+    this.x = x;
+    this.y = y;
+    ctx.rect(0, 0, width, height);
   }
 
-  /**
-   * 绘制高亮轮廓。
-   */
-  drawOutline(graphics: Graphics): void {
-    graphics.beginPath().rect(0, 0, this.w, this.h);
-  }
   /**
    * 是否是叶子节点
    */
@@ -265,12 +81,13 @@ export abstract class AbstractPrimitiveView<
     this.updateAttrs({ [key]: value } as unknown as Partial<T>);
   }
   applyFillsAndStrokes(): void {
-    this.fills.forEach((fill) => {
+    const { fills = [], strokes = [] } = this.model;
+    fills.forEach((fill) => {
       if (fill.type === 'SOLID') {
         this.graphics.fill(fill.color);
       }
     });
-    this.strokes.forEach((stroke) => {
+    strokes.forEach((stroke) => {
       if (stroke.type === 'SOLID' && stroke.strokeWidth !== undefined) {
         this.graphics.stroke({
           color: stroke.color,
