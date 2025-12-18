@@ -104,7 +104,7 @@ export interface IText extends IBasePrimitive {
   fontWeight: string;
 }
 
-export abstract class AbstractPrimitive<
+export abstract class AbstractPrimitiveView<
     T extends IBasePrimitive = IBasePrimitive
   >
   extends Container

@@ -1,4 +1,4 @@
-import { AbstractPrimitive, PrimitiveMap } from './abstract-primitive';
+import { AbstractPrimitiveView, PrimitiveMap } from './abstract-primitive';
 
 export interface LayerConfig {
   /** 图层 ID */
@@ -17,7 +17,7 @@ export interface LayerConfig {
 /**
  * 图层类,逻辑层，不作为渲染节点
  */
-export class Layer extends AbstractPrimitive {
+export class Layer extends AbstractPrimitiveView {
   public id: string;
   public name: string;
   public locked: boolean = false;

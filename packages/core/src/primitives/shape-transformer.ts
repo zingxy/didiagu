@@ -6,7 +6,7 @@ import {
   GraphicsContext,
   Cursor,
 } from 'pixi.js';
-import { AbstractPrimitive, PrimitiveMap } from './abstract-primitive';
+import { AbstractPrimitiveView, PrimitiveMap } from './abstract-primitive';
 import { Rect } from './shape-rect';
 import { IPoint } from '../tool-manager';
 import { decompose, decomposePixi, normalizeRect } from '@didiagu/math';
@@ -33,7 +33,7 @@ interface IContext {
 export interface IHandleConfig {
   handleType: HandleType;
   cursor?: Cursor;
-  getPosition(transformer: AbstractPrimitive): { x: number; y: number };
+  getPosition(transformer: AbstractPrimitiveView): { x: number; y: number };
   onPointerdown?(context: Partial<IContext>): void;
   onPointermove?(context: IContext): void;
   onPointerup?(context: Partial<IContext>): void;
@@ -126,7 +126,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-middle',
     cursor: 'ns-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w / 2, y: 0 };
     },
     onPointermove: createScaleHandler({
@@ -137,7 +137,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'top-right',
     cursor: 'nesw-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w, y: 0 };
     },
     onPointermove: createScaleHandler({
@@ -149,7 +149,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'middle-right',
     cursor: 'ew-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w, y: primitive.h / 2 };
     },
     onPointermove: createScaleHandler({
@@ -160,7 +160,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'bottom-right',
     cursor: 'nwse-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w, y: primitive.h };
     },
     onPointermove: createScaleHandler({
@@ -172,7 +172,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'bottom-middle',
     cursor: 'ns-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w / 2, y: primitive.h };
     },
     onPointermove: createScaleHandler({
@@ -183,7 +183,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'bottom-left',
     cursor: 'nesw-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: 0, y: primitive.h };
     },
     onPointermove: createScaleHandler({
@@ -195,7 +195,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'middle-left',
     cursor: 'ew-resize',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: 0, y: primitive.h / 2 };
     },
     onPointermove: createScaleHandler({
@@ -206,7 +206,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'rotate',
     cursor: 'grab',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w / 2, y: -40 };
     },
     onPointermove(context) {
@@ -233,7 +233,7 @@ export const defaultHandleConfigs: IHandleConfig[] = [
   {
     handleType: 'mover',
     cursor: 'move',
-    getPosition(primitive: AbstractPrimitive) {
+    getPosition(primitive: AbstractPrimitiveView) {
       return { x: primitive.w / 2, y: primitive.h / 2 };
     },
     onPointermove(context) {
@@ -289,9 +289,9 @@ export class Handler extends Ellipse {
  * any transformation (scale/rotate/move) apply to Transformer will apply to selected primitives
  * @see {@link Transformer.applyTransform} to update selected primitives
  */
-export class Transformer extends AbstractPrimitive {
+export class Transformer extends AbstractPrimitiveView {
   override readonly type = PrimitiveMap.Transformer;
-  private selectedPrimitives: AbstractPrimitive[] = [];
+  private selectedPrimitives: AbstractPrimitiveView[] = [];
   // handles pool
   private handles = new Set<Handler>();
   private dragging = false;
@@ -317,7 +317,7 @@ export class Transformer extends AbstractPrimitive {
   override isLeaf(): boolean {
     return false;
   }
-  update(selected: AbstractPrimitive[]) {
+  update(selected: AbstractPrimitiveView[]) {
     this.selectedPrimitives = selected;
     let handleConfigs: IHandleConfig[] = defaultHandleConfigs;
     if (this.selectedPrimitives.length === 0) {
@@ -509,7 +509,7 @@ export class Transformer extends AbstractPrimitive {
     this.dragging = false;
     this.lastInWorld = null;
   };
-  apply(primitive: AbstractPrimitive, m: Matrix) {
+  apply(primitive: AbstractPrimitiveView, m: Matrix) {
     primitive.setFromMatrix(m);
     primitive.updateLocalTransform();
     return;

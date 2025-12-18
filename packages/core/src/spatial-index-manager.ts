@@ -7,7 +7,7 @@
  */
 import RBush from 'rbush';
 import * as PIXI from 'pixi.js';
-import { AbstractPrimitive } from './primitives/abstract-primitive';
+import { AbstractPrimitiveView } from './primitives/abstract-primitive';
 import { SceneGraph } from './scene-graph';
 
 /**
@@ -15,7 +15,7 @@ import { SceneGraph } from './scene-graph';
  */
 interface IndexedBounds extends PIXI.Bounds {
   uuid: string;
-  ref: AbstractPrimitive;
+  ref: AbstractPrimitiveView;
 }
 
 /**
@@ -24,13 +24,16 @@ interface IndexedBounds extends PIXI.Bounds {
  */
 export class SpatialIndexManager {
   private spatialIndex = new RBush<IndexedBounds>();
-  private primitiveToBounds = new WeakMap<AbstractPrimitive, IndexedBounds>();
+  private primitiveToBounds = new WeakMap<
+    AbstractPrimitiveView,
+    IndexedBounds
+  >();
   private sceneGraph: SceneGraph;
 
   constructor(sceneGraph: SceneGraph) {
     this.sceneGraph = sceneGraph;
   }
-  private index(primitive: AbstractPrimitive) {
+  private index(primitive: AbstractPrimitiveView) {
     const bounds = this.sceneGraph.getSceneBounds(primitive);
     const indexedBounds: IndexedBounds = Object.assign(bounds, {
       uuid: primitive.uuid,
@@ -40,7 +43,7 @@ export class SpatialIndexManager {
     this.primitiveToBounds.set(primitive, indexedBounds);
   }
 
-  public track(primitive: AbstractPrimitive) {
+  public track(primitive: AbstractPrimitiveView) {
     this.index(primitive);
     // 使用箭头函数绑定正确的上下文
     const onAttrChanged = () => {

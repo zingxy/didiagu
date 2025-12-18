@@ -1,11 +1,15 @@
 import { GraphicsContext } from 'pixi.js';
-import { AbstractPrimitive, ILine, PrimitiveMap } from './abstract-primitive';
+import {
+  AbstractPrimitiveView,
+  ILine,
+  PrimitiveMap,
+} from './abstract-primitive';
 import { defaultHandleConfigs } from './shape-transformer';
 // import { normalizeRect } from '@didiagu/math';
 
 type ILineConfig = Partial<ILine>;
 
-export class Line extends AbstractPrimitive<ILine> implements ILine {
+export class Line extends AbstractPrimitiveView<ILine> implements ILine {
   readonly type = PrimitiveMap.Line;
 
   x1: number = 0;

@@ -1,6 +1,6 @@
 import { FederatedPointerEvent } from 'pixi.js';
 import type { ITool, IPoint } from './types';
-import { AbstractPrimitive } from '../primitives';
+import { AbstractPrimitiveView } from '../primitives';
 import { Editor } from '../editor';
 import { DRAG_THRESHOLD } from '../contants';
 import { normalizeRect } from '@didiagu/math';
@@ -14,7 +14,7 @@ abstract class AbstractDrawShapeTool implements ITool {
   private last: IPoint | null = null;
   private delta: IPoint | null = null;
   // 当前正在绘制的矩形
-  protected drawingShape: AbstractPrimitive | null = null;
+  protected drawingShape: AbstractPrimitiveView | null = null;
   protected editor: Editor;
   // 图形计数器
   private counter: number = 0;
@@ -119,7 +119,7 @@ abstract class AbstractDrawShapeTool implements ITool {
     this.drawingShape = null;
   }
   /** 创建图形 */
-  abstract createShape(): AbstractPrimitive;
+  abstract createShape(): AbstractPrimitiveView;
   /** 更新图形属性 */
   updateShape(start: IPoint, end: IPoint, w: number, h: number) {
     if (!this.drawingShape) return;

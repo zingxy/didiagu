@@ -1,6 +1,6 @@
 import { Transformer } from './primitives/shape-transformer';
 import { Editor } from './editor';
-import { AbstractPrimitive } from './primitives/abstract-primitive';
+import { AbstractPrimitiveView } from './primitives/abstract-primitive';
 
 export class TransformerManager {
   private editor: Editor;
@@ -15,7 +15,7 @@ export class TransformerManager {
     });
   }
 
-  updateTransformer = (selected: AbstractPrimitive[]) => {
+  updateTransformer = (selected: AbstractPrimitiveView[]) => {
     if (selected.length === 0) {
       this.transformer.visible = false;
     }

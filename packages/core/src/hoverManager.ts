@@ -7,14 +7,14 @@
  */
 
 import { decompose } from '@didiagu/math';
-import { AbstractPrimitive, Editor } from '.';
+import { AbstractPrimitiveView, Editor } from '.';
 import { DidiaguPointerEvent, IEventHandler } from './dispatcher';
 import * as PIXI from 'pixi.js';
 export class HoverManager implements IEventHandler {
   editor: Editor;
   g: PIXI.Graphics;
   currentPrimitiveId: string | null = null;
-  currentPrimitive: AbstractPrimitive | null = null;
+  currentPrimitive: AbstractPrimitiveView | null = null;
   constructor(editor: Editor) {
     this.editor = editor;
     this.g = new PIXI.Graphics();
@@ -25,8 +25,8 @@ export class HoverManager implements IEventHandler {
 
   onPointerMove(e: DidiaguPointerEvent): boolean | void {
     // console.log('move', e.target);
-    if (e.target instanceof AbstractPrimitive) {
-      const primitive = e.target as AbstractPrimitive;
+    if (e.target instanceof AbstractPrimitiveView) {
+      const primitive = e.target as AbstractPrimitiveView;
       if (!primitive) {
         return;
       }

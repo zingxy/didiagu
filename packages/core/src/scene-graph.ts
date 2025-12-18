@@ -9,13 +9,13 @@
 import { isIntersect, Matrix } from '@didiagu/math';
 import { Editor } from './editor';
 import * as PIXI from 'pixi.js';
-import { AbstractPrimitive, Line } from './primitives';
+import { AbstractPrimitiveView, Line } from './primitives';
 import { SpatialIndexManager } from './spatial-index-manager';
 import { Text } from './primitives/shape-text';
 
 export interface SceneGraphEvents {
   /** 场景树节点增加或删除 */
-  'scene.descendantChanged': (children: AbstractPrimitive[]) => void;
+  'scene.descendantChanged': (children: AbstractPrimitiveView[]) => void;
 }
 
 export class SceneGraph {
@@ -41,10 +41,10 @@ export class SceneGraph {
   /**
    * @description 图元映射表，通过id快速定位图元
    */
-  private readonly primitiveMap: Map<string, AbstractPrimitive> = new Map();
+  private readonly primitiveMap: Map<string, AbstractPrimitiveView> = new Map();
   private editor: Editor;
   /**图形层 */
-  public doc: PIXI.Container<AbstractPrimitive>;
+  public doc: PIXI.Container<AbstractPrimitiveView>;
   /**辅助层 */
   public helperLayer: PIXI.Container;
   constructor(editor: Editor, root: PIXI.Container) {
@@ -100,10 +100,10 @@ export class SceneGraph {
    * @param primitive
    * @returns
    */
-  getSceneBounds(primitive: AbstractPrimitive): PIXI.Bounds {
+  getSceneBounds(primitive: AbstractPrimitiveView): PIXI.Bounds {
     return this.pixiWorldBoundsToSceneBounds(primitive.getBounds());
   }
-  getSceneTransform(primitive: AbstractPrimitive): Matrix {
+  getSceneTransform(primitive: AbstractPrimitiveView): Matrix {
     const worldTransform = primitive.worldTransform;
     const sceneMatrix = this.viewMatrix.clone().invert().append(worldTransform);
     return sceneMatrix;
@@ -137,13 +137,13 @@ export class SceneGraph {
    * @description 获取在屏幕范围内的所有图元
    * @returns 图元列表
    */
-  getPrimitivesInViewport(): AbstractPrimitive[] {
+  getPrimitivesInViewport(): AbstractPrimitiveView[] {
     const viewportBounds = this.getViewportBoundsInScene();
     return this.getPrimiveByBounds(viewportBounds);
   }
 
-  getPrimiveByBounds(bounds: PIXI.Bounds): AbstractPrimitive[] {
-    const primitives: AbstractPrimitive[] = [];
+  getPrimiveByBounds(bounds: PIXI.Bounds): AbstractPrimitiveView[] {
+    const primitives: AbstractPrimitiveView[] = [];
     this.trverseDoc((node) => {
       const nodeBounds = this.getSceneBounds(node);
       if (node instanceof Line) {
@@ -164,15 +164,15 @@ export class SceneGraph {
     });
     return primitives;
   }
-  getPrimiveById(id: string): AbstractPrimitive | undefined {
+  getPrimiveById(id: string): AbstractPrimitiveView | undefined {
     return this.primitiveMap.get(id);
   }
-  getPathFromRoot(primitive: AbstractPrimitive): AbstractPrimitive[] {
-    const path: AbstractPrimitive[] = [];
-    let current: AbstractPrimitive | null = primitive;
+  getPathFromRoot(primitive: AbstractPrimitiveView): AbstractPrimitiveView[] {
+    const path: AbstractPrimitiveView[] = [];
+    let current: AbstractPrimitiveView | null = primitive;
     while (current) {
       path.unshift(current);
-      current = current.parent as AbstractPrimitive | null;
+      current = current.parent as AbstractPrimitiveView | null;
     }
     return path;
   }
@@ -184,7 +184,7 @@ export class SceneGraph {
   getTopMostPrimitiveAtPoint(point: {
     x: number;
     y: number;
-  }): AbstractPrimitive | null {
+  }): AbstractPrimitiveView | null {
     const primitivesInViewport = this.getPrimitivesInViewport();
     primitivesInViewport.sort((a, b) => this.compareZIndex(a, b));
     for (let i = primitivesInViewport.length - 1; i >= 0; i--) {
@@ -202,7 +202,7 @@ export class SceneGraph {
    * @param b 图元b
    * @returns 正数表示a在b上方，负数表示a在b下方，0表示相等
    */
-  compareZIndex(a: AbstractPrimitive, b: AbstractPrimitive): number {
+  compareZIndex(a: AbstractPrimitiveView, b: AbstractPrimitiveView): number {
     const aPath = this.getPathFromRoot(a);
     const bPath = this.getPathFromRoot(b);
     const minLength = Math.min(aPath.length, bPath.length);
@@ -226,8 +226,8 @@ export class SceneGraph {
     return this.scene.toLocal(...args);
   };
   traverse(
-    root: AbstractPrimitive,
-    callback: (node: AbstractPrimitive) => void
+    root: AbstractPrimitiveView,
+    callback: (node: AbstractPrimitiveView) => void
   ): void {
     callback(root);
     // base case
@@ -236,15 +236,15 @@ export class SceneGraph {
     }
     // make progress
     for (const child of root.children) {
-      if (child instanceof AbstractPrimitive) {
+      if (child instanceof AbstractPrimitiveView) {
         this.traverse(child, callback);
       }
     }
   }
   // 将layer trees转换成其它树
   map<T extends { children?: T[] }>(
-    root: AbstractPrimitive,
-    callback: (node: AbstractPrimitive) => T
+    root: AbstractPrimitiveView,
+    callback: (node: AbstractPrimitiveView) => T
   ): T {
     const newRoot = callback(root);
     // base case
@@ -255,7 +255,7 @@ export class SceneGraph {
     // 非叶子节点，递归处理子节点
     const children = [] as T[];
     for (const child of root.children) {
-      if (child instanceof AbstractPrimitive) {
+      if (child instanceof AbstractPrimitiveView) {
         children.push(this.map(child, callback));
       } else {
         continue;
@@ -265,13 +265,13 @@ export class SceneGraph {
     return newRoot;
   }
   mapDoc<T extends { children?: T[] }>(
-    callback: (node: AbstractPrimitive) => T
+    callback: (node: AbstractPrimitiveView) => T
   ): T[] {
     return this.doc.children.map((child) => {
       return this.map(child, callback);
     });
   }
-  trverseDoc(callback: (node: AbstractPrimitive) => void): void {
+  trverseDoc(callback: (node: AbstractPrimitiveView) => void): void {
     this.doc.children.forEach((child) => {
       this.traverse(child, callback);
     });

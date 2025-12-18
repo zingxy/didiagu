@@ -1,9 +1,13 @@
 import { GraphicsContext } from 'pixi.js';
-import { AbstractPrimitive, IRect, PrimitiveMap } from './abstract-primitive';
+import {
+  AbstractPrimitiveView,
+  IRect,
+  PrimitiveMap,
+} from './abstract-primitive';
 
 type IRectConfig = Partial<IRect>;
 
-export class Rect extends AbstractPrimitive implements IRect {
+export class Rect extends AbstractPrimitiveView implements IRect {
   readonly type = PrimitiveMap.Rect;
   r: number = 0;
   constructor(config: IRectConfig) {
