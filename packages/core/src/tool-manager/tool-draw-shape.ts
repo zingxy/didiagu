@@ -124,12 +124,8 @@ abstract class AbstractDrawShapeTool implements ITool {
   /** 更新图形属性 */
   updateShape(start: IPoint, end: IPoint, w: number, h: number) {
     if (!this.drawingShape) return;
-    const { x, y, w: width, h: height } = normalizeRect(start.x, start.y, w, h);
     this.drawingShape.updateAttrs({
-      x,
-      y,
-      width,
-      height,
+      ...normalizeRect(start.x, start.y, w, h),
     });
   }
   /** 完成图形 */

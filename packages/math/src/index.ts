@@ -43,9 +43,9 @@ export function decompose(matrix: Matrix) {
 }
 
 /**
- * @description 执行pixi的矩阵分解 
- * @param matrix 
- * @returns 
+ * @description 执行pixi的矩阵分解
+ * @param matrix
+ * @returns
  */
 export function decomposePixi(matrix: Matrix) {
   const transform = new PIXI.Transform();
@@ -90,6 +90,6 @@ export function normalizeRect(x: number, y: number, w: number, h: number) {
     ny = y + h;
     nh = -h;
   }
-  return { x: nx, y: ny, w: nw, h: nh };
+  return { x: nx, y: ny, width: nw, height: nh };
 }
 export { Matrix };
