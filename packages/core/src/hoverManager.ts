@@ -18,7 +18,7 @@ export class HoverManager implements IEventHandler {
   constructor(editor: Editor) {
     this.editor = editor;
     this.g = new PIXI.Graphics();
-    this.editor.sceneGraph.cameraSpace.addChild(this.g);
+    this.editor.sceneGraph.top.addChild(this.g);
     this.editor.on('camera.changed', this.stroke.bind(this));
     requestAnimationFrame(this.stroke.bind(this));
   }
