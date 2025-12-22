@@ -36,7 +36,10 @@ export interface IPrimitive {
   readonly type: PrimitiveType;
   // 名称
   label: string;
-
+  // 父节点id
+  parentId: number | null;
+  // 分数索引
+  index: number;
   // geo
   width: number;
   height: number;
@@ -104,6 +107,8 @@ function createBase(attr: Partial<IPrimitive>): IPrimitive {
     uuid: nanoid(),
     type: 'Unknown',
     label: 'Text',
+    parentId: null,
+    index: 0,
     width: 0,
     height: 0,
     transform: new Matrix().identity(),
