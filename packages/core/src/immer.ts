@@ -4,22 +4,68 @@ import {
   enablePatches,
   applyPatches,
 } from 'immer';
-enablePatches();
-
+import type { Patch } from 'immer';
+import EventEmitter from 'eventemitter3';
 interface IShape {
   id: string;
-  type: 'circle' | 'rectangle';
-  width: number;
-  height: number;
-  deleted?: boolean;
+  type: 'circle';
+  color: string;
+  deleted: boolean;
 }
 
 type ElementMap = Record<string, IShape>;
 let elements: ElementMap = {};
+const ee = new EventEmitter();
+
+enablePatches();
+class Delta {
+  patches: Patch[];
+  inversePatches: Patch[];
+  constructor(patches: Patch[], inversePatches: Patch[]) {
+    this.patches = patches;
+    this.inversePatches = inversePatches;
+  }
+  public static create(patches: Patch[], inversePatches: Patch[]) {
+    return new Delta(patches, inversePatches);
+  }
+  inverse(): Delta {
+    return new Delta(this.inversePatches, this.patches);
+  }
+}
+
+class History extends EventEmitter {
+  undoStack: Delta[] = [];
+  redoStack: Delta[] = [];
+
+  public static pop(stack: Delta[]): Delta | undefined {
+    return stack.pop();
+  }
+  public static push(stack: Delta[], delta: Delta) {
+    stack.push(delta.inverse());
+  }
+  record(delta: Delta) {
+    History.push(this.undoStack, delta);
+    this.redoStack = [];
+  }
+  undo() {
+    const delta = History.pop(this.undoStack);
+    if (delta) {
+      elements = applyPatches(elements, delta.patches);
+      History.push(this.redoStack, delta);
+    }
+  }
+  redo() {
+    const delta = History.pop(this.redoStack);
+    if (delta) {
+      elements = applyPatches(elements, delta.patches);
+      History.push(this.undoStack, delta);
+    }
+  }
+}
 
 const add = (elements: ElementMap, newElement: IShape) => {
   /* 对于add操作， 我们将其分解为两个步骤：
-   * 1. 先添加一个deleted状态为true的元素（表示删除）
+   * 1. 先添加一个deleted状态为true的元素（初始状态）
    * 2. 然后再添加一个deleted状态为false的元素（表示添加）,这一步会记录patches和inversePatches
    * 这样做的目的是当撤销时，把deleted设置为true即可，而不需要真正删除元素，从而保留元素的历史状态。
    */
@@ -38,6 +84,7 @@ const add = (elements: ElementMap, newElement: IShape) => {
     draft[newElement.id].deleted = false;
   });
 };
+
 const update = (elements: ElementMap, id: string, attr: Partial<IShape>) => {
   return produceWithPatches(elements, (draft) => {
     if (draft[id]) {
@@ -60,34 +107,66 @@ const remove = (elements: ElementMap, id: string) => {
   });
 };
 
-const inverse = [];
-let patches, inversePatches;
-[elements, patches, inversePatches] = add(elements, {
-  id: 'shape-1',
-  type: 'rectangle',
-  width: 100,
-  height: 200,
+const addElements = (elements: ElementMap, ...newElements: IShape[]) => {
+  let nextElements = elements;
+  let allPatches: Patch[] = [];
+  let allInversePatches: Patch[] = [];
+
+  for (const newElement of newElements) {
+    const [updatedElements, patches, inversePatches] = add(
+      nextElements,
+      newElement
+    );
+    nextElements = updatedElements;
+    allPatches = allPatches.concat(patches);
+    allInversePatches = allInversePatches.concat(inversePatches);
+  }
+
+  const delta = new Delta(allPatches, allInversePatches.reverse());
+  ee.emit('history', delta);
+  return [nextElements, delta] as const;
+};
+
+const history = new History();
+ee.on('history', (delta: Delta) => {
+  history.record(delta);
 });
 
-inverse.push(...inversePatches);
-console.log('patchers add', patches, inversePatches);
-console.log('elements', elements);
+let delta = new Delta([], []);
 
-[elements, patches, inversePatches] = remove(elements, 'shape-1');
-inverse.push(...inversePatches);
-console.log('patchers remove', patches, inversePatches);
-console.log('elements', elements);
+[elements, delta] = addElements(
+  elements,
+  {
+    id: 'element-1',
+    type: 'circle',
+    color: 'red',
+    deleted: false,
+  },
+  {
+    id: 'element-2',
+    type: 'circle',
+    color: 'blue',
+    deleted: false,
+  }
+);
+console.log('After adding elements:', elements);
+console.log('history:', history);
 
-[elements, patches, inversePatches] = add(elements, {
-  id: 'shape-2',
+history.undo();
+console.log('After undo add:', elements);
+console.log('history:', history);
+
+[elements, delta] = addElements(elements, {
+  id: 'element-3',
   type: 'circle',
-  width: 100,
-  height: 200,
+  color: 'red',
+  deleted: false,
 });
 
-inverse.push(...inversePatches);
-console.log('patchers add', patches, inversePatches);
-console.log('elements', elements);
+// history.redo();
+console.log('After redo add:', elements);
+console.log('history:', history);
 
-elements = applyPatches(elements, inverse.reverse());
-console.log('elements after inverse', elements);
+history.undo();
+console.log('After redo add:', elements);
+console.log('history:', history);
